@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <mir/default_server_configuration.h>
+#include <mir/shell/session.h>
 
 class Configuration;
 
@@ -30,13 +31,20 @@ class SystemCompositor : public DMMessageHandler
 {
 public:
     SystemCompositor(int from_dm_fd, int to_dm_fd);
+
     int run(int argc, char const* argv[]);
 
+    std::shared_ptr<mir::shell::Session> get_active_session();
+
+    void emit_change_notification();
+
 private:
-    std::shared_ptr<mir::DefaultServerConfiguration> config;
+    std::shared_ptr<Configuration> config;
     boost::asio::io_service io_service;
     DMConnection dm_connection;
     std::thread thread;
+    std::shared_ptr<mir::shell::Session> active_session;
+    std::shared_ptr<mir::shell::Session> old_session;
 
     virtual void set_active_session(std::string client_name);
     void main();
