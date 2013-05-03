@@ -18,6 +18,8 @@
 add_executable(
   unity-system-compositor
   main.cpp
+  compositing_strategy.cpp
+  compositing_strategy.h
   dm_connection.cpp
   dm_connection.h
   system_compositor.cpp
