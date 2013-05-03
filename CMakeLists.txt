@@ -14,9 +14,13 @@
 #
 # Authored by: Robert Ancell <robert.ancell@canonical.com>
 
-project(UnitySystemCompisitor)
+project(UnitySystemCompositor)
 
+# We need a recent version of CMake
 cmake_minimum_required(VERSION 2.8)
+
+# Look for CMake modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set location of outputs
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -29,6 +33,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 find_package(PkgConfig)
 pkg_check_modules(MIRSERVER REQUIRED mirserver)
 include_directories(${MIRSERVER_INCLUDE_DIRS})
+
+# Check for GL
+find_package(GLESv2 REQUIRED)
+find_package(GLM REQUIRED)
+include_directories (${GLESv2_INCLUDE_DIRS})                                    
+include_directories (${GLM_INCLUDE_DIRS})
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
