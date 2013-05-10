@@ -17,7 +17,33 @@
  */
 
 #include "system_compositor.h"
+
+#include <mir/default_server_configuration.h>
 #include <mir/report_exception.h>
+
+namespace
+{
+class SystemCompositorConfiguration : public Configuration
+{
+public:
+    SystemCompositorConfiguration(int argc, char const* argv[]) :
+        mir_server_configuration(argc, argv) {}
+
+    mir::ServerConfiguration&                      the_mir_server_configuration()
+        { return mir_server_configuration; }
+
+    std::shared_ptr<mir::shell::SessionContainer>  the_shell_session_container()
+        { return mir_server_configuration.the_shell_session_container(); }
+
+    std::shared_ptr<mir::shell::FocusSetter>       the_shell_focus_setter()
+        { return mir_server_configuration.the_shell_focus_setter(); }
+
+    ~SystemCompositorConfiguration() noexcept {}
+
+private:
+    mir::DefaultServerConfiguration mir_server_configuration;
+};
+}
 
 int main(int argc, char const* argv[])
 try
@@ -31,8 +57,12 @@ try
     auto from_dm_fd = atoi(argv[1]);
     auto to_dm_fd = atoi(argv[2]);
 
-    SystemCompositor system_compositor(from_dm_fd, to_dm_fd);
-    system_compositor.run(argc, argv);
+    SystemCompositor system_compositor(
+        from_dm_fd,
+        to_dm_fd,
+        std::make_shared<SystemCompositorConfiguration>(argc, argv));
+
+    system_compositor.run();
 
     return 0;
 }

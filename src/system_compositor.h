@@ -21,18 +21,39 @@
 
 #include "dm_connection.h"
 
-#include <mir/default_server_configuration.h>
+namespace mir
+{
+class ServerConfiguration;
+namespace shell
+{
+class SessionContainer;
+class FocusSetter;
+}
+}
 
-class Configuration;
+
+class Configuration
+{
+public:
+    Configuration() = default;
+    virtual mir::ServerConfiguration&                      the_mir_server_configuration() = 0;
+    virtual std::shared_ptr<mir::shell::SessionContainer>  the_shell_session_container() = 0;
+    virtual std::shared_ptr<mir::shell::FocusSetter>       the_shell_focus_setter() = 0;
+
+protected:
+    virtual ~Configuration() = default;
+    Configuration(Configuration const&) = delete;
+    Configuration& operator=(Configuration const&) = delete;
+};
 
 class SystemCompositor : public DMMessageHandler
 {
 public:
-    SystemCompositor(int from_dm_fd, int to_dm_fd);
-    void run(int argc, char const* argv[]);
+    SystemCompositor(int from_dm_fd, int to_dm_fd, std::shared_ptr<Configuration> const& config);
+    void run();
 
 private:
-    std::shared_ptr<mir::DefaultServerConfiguration> config;
+    std::shared_ptr<Configuration> const config;
     boost::asio::io_service io_service;
     DMConnection dm_connection;
 

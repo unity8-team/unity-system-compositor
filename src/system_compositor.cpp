@@ -27,15 +27,15 @@
 
 namespace msh = mir::shell;
 
-SystemCompositor::SystemCompositor(int from_dm_fd, int to_dm_fd) :
-        dm_connection(io_service, from_dm_fd, to_dm_fd)
+
+SystemCompositor::SystemCompositor(int from_dm_fd, int to_dm_fd, std::shared_ptr<Configuration> const& config) :
+        config{config},
+        dm_connection{io_service, from_dm_fd, to_dm_fd}
 {
 }
 
-void SystemCompositor::run(int argc, char const* argv[])
+void SystemCompositor::run()
 {
-    config = std::make_shared<mir::DefaultServerConfiguration>(argc, argv);
-
     struct ScopeGuard
     {
         explicit ScopeGuard(boost::asio::io_service& io_service) : io_service(io_service) {}
@@ -45,7 +45,7 @@ void SystemCompositor::run(int argc, char const* argv[])
         std::thread thread;
     } guard(io_service);
 
-    mir::run_mir(*config, [&](mir::DisplayServer&)
+    mir::run_mir(config->the_mir_server_configuration(), [&](mir::DisplayServer&)
         {
             guard.thread = std::thread(&SystemCompositor::main, this);
         });
@@ -56,7 +56,7 @@ void SystemCompositor::set_active_session(std::string client_name)
     std::cerr << "set_active_session" << std::endl;
 
     std::shared_ptr<msh::Session> session;
-    config->the_shell_session_container()->for_each([&client_name, &session](std::shared_ptr<msh::Session> const& s)
+    config->the_shell_session_container()->for_each([&](std::shared_ptr<msh::Session> const& s)
     {
         if (s->name() == client_name)
             session = s;
