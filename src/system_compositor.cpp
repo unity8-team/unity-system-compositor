@@ -28,7 +28,7 @@
 namespace msh = mir::shell;
 
 
-SystemCompositor::SystemCompositor(int from_dm_fd, int to_dm_fd, std::shared_ptr<Configuration> const& config) :
+SystemCompositor::SystemCompositor(int from_dm_fd, int to_dm_fd, std::shared_ptr<SystemCompositorConfiguration> const& config) :
         config{config},
         dm_connection{io_service, from_dm_fd, to_dm_fd}
 {

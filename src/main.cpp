@@ -23,10 +23,10 @@
 
 namespace
 {
-class SystemCompositorConfiguration : public Configuration
+class DefaultSystemCompositorConfiguration : public SystemCompositorConfiguration
 {
 public:
-    SystemCompositorConfiguration(int argc, char const* argv[]) :
+    DefaultSystemCompositorConfiguration(int argc, char const* argv[]) :
         mir_server_configuration(argc, argv) {}
 
     mir::ServerConfiguration&                      the_mir_server_configuration()
@@ -38,7 +38,7 @@ public:
     std::shared_ptr<mir::shell::FocusSetter>       the_shell_focus_setter()
         { return mir_server_configuration.the_shell_focus_setter(); }
 
-    ~SystemCompositorConfiguration() noexcept {}
+    ~DefaultSystemCompositorConfiguration() noexcept {}
 
 private:
     mir::DefaultServerConfiguration mir_server_configuration;
@@ -60,7 +60,7 @@ try
     SystemCompositor system_compositor(
         from_dm_fd,
         to_dm_fd,
-        std::make_shared<SystemCompositorConfiguration>(argc, argv));
+        std::make_shared<DefaultSystemCompositorConfiguration>(argc, argv));
 
     system_compositor.run();
 
