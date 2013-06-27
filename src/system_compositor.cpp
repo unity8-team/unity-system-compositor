@@ -22,17 +22,28 @@
 #include <mir/shell/session.h>
 #include <mir/shell/session_container.h>
 #include <mir/shell/focus_setter.h>
+#include <mir/input/event_filter.h>
 
 #include <iostream>
 #include <thread>
 
 namespace msh = mir::shell;
+namespace mi = mir::input;
 
-class SystemCompositorServerConfiguration : public mir::DefaultServerConfiguration
+struct SystemCompositorEventFilter : mi::EventFilter
 {
-public:
-    SystemCompositorServerConfiguration(int argc, char const** argv)
-        : mir::DefaultServerConfiguration(argc, argv)
+    bool handle(MirEvent const& event)
+    {
+        return false;
+    }
+};
+
+struct SystemCompositorServerConfiguration : mir::DefaultServerConfiguration
+{
+    SystemCompositorServerConfiguration(int argc, char const* argv[],
+                                        std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filter_list)
+        : mir::DefaultServerConfiguration(argc, argv),
+          filter_list(filter_list)
     {
         namespace po = boost::program_options;
 
@@ -50,11 +61,20 @@ public:
     {
         return the_options()->get("to-dm-fd", -1);
     }
+
+    std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
+    {
+        return filter_list;
+    }
+
+    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const filter_list;
 };
 
-void SystemCompositor::run(int argc, char const** argv)
+void SystemCompositor::run(int argc, char const* argv[])
 {
-    auto c = std::make_shared<SystemCompositorServerConfiguration>(argc, argv);
+    auto filter = std::make_shared<SystemCompositorEventFilter>();
+    auto filters = {filter};
+    auto c = std::make_shared<SystemCompositorServerConfiguration>(argc, argv, filters);
     config = c;
 
     dm_connection = std::make_shared<DMConnection>(io_service, c->from_dm_fd(), c->to_dm_fd());

@@ -28,7 +28,7 @@ class Configuration;
 class SystemCompositor : public DMMessageHandler
 {
 public:
-    void run(int argc, char const** argv);
+    void run(int argc, char const* argv[]);
 
 private:
     std::shared_ptr<mir::DefaultServerConfiguration> config;
