@@ -19,10 +19,27 @@
 #include "system_compositor.h"
 #include <mir/report_exception.h>
 #include <iostream>
+#include <sys/stat.h>
+
+/* Check the existence of a file which
+ * will force X to be used instead of Mir.
+ */
+static bool should_use_x(void)
+{
+    std::string name = "/usr/share/mir/force-off";
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0);
+}
 
 int main(int argc, char const* argv[])
 try
 {
+    if (should_use_x())
+    {
+        std::cerr << "Manually forcing the use of X"
+                  << std::endl;
+        return 1;
+    }
     SystemCompositor system_compositor;
     system_compositor.run(argc, argv);
 
