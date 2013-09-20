@@ -48,9 +48,8 @@ enum class USCMessageID
 class DMConnection
 {
 public:
-    DMConnection(boost::asio::io_service& io_service, int from_dm_fd, int to_dm_fd) :
-        from_dm_pipe(io_service, from_dm_fd),
-        to_dm_pipe(io_service, to_dm_fd) {};
+    DMConnection(boost::asio::io_service& io_service, int dm_socket_fd) :
+        dm_socket(io_service, dm_socket_fd) {};
 
     void set_handler(DMMessageHandler *handler)
     {
@@ -63,8 +62,7 @@ public:
 
 private:
     DMMessageHandler *handler;
-    boost::asio::posix::stream_descriptor from_dm_pipe;
-    boost::asio::posix::stream_descriptor to_dm_pipe;
+    boost::asio::posix::stream_descriptor dm_socket;
     static size_t const size_of_header = 4;
     unsigned char message_header_bytes[size_of_header];
     boost::asio::streambuf message_payload_buffer;

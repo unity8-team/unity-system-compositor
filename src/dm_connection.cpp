@@ -37,7 +37,7 @@ void DMConnection::send_ready()
 
 void DMConnection::read_header()
 {
-    ba::async_read(from_dm_pipe,
+    ba::async_read(dm_socket,
                    ba::buffer(message_header_bytes),
                    boost::bind(&DMConnection::on_read_header,
                                this,
@@ -49,7 +49,7 @@ void DMConnection::on_read_header(const bs::error_code& ec)
     if (!ec)
     {
         size_t const payload_length = message_header_bytes[2] << 8 | message_header_bytes[3];
-        ba::async_read(from_dm_pipe,
+        ba::async_read(dm_socket,
                        message_payload_buffer,
                        ba::transfer_exactly(payload_length),
                        boost::bind(&DMConnection::on_read_payload,
@@ -128,5 +128,5 @@ void DMConnection::send(USCMessageID id, std::string const& body)
     std::copy(body.begin(), body.end(), write_buffer.begin() + sizeof header_bytes);
 
     // FIXME: Make asynchronous
-    ba::write(to_dm_pipe, ba::buffer(write_buffer));
+    ba::write(dm_socket, ba::buffer(write_buffer));
 }

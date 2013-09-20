@@ -41,20 +41,14 @@ public:
         namespace po = boost::program_options;
 
         add_options()
-            ("from-dm-fd", po::value<int>(),  "File descriptor of read end of pipe from display manager [int]")
-            ("to-dm-fd", po::value<int>(),  "File descriptor of write end of pipe to display manager [int]");
+            ("dm-socket-fd", po::value<int>(),  "File descriptor of socket to display manager [int]")
         add_options()
             ("version", "Show version of Unity System Compositor");
     }
 
-    int from_dm_fd()
+    int dm_socket_fd()
     {
-        return the_options()->get("from-dm-fd", -1);
-    }
-
-    int to_dm_fd()
-    {
-        return the_options()->get("to-dm-fd", -1);
+        return the_options()->get("dm-socket-fd", -1);
     }
 
     bool show_version()
@@ -109,7 +103,7 @@ void SystemCompositor::run(int argc, char const** argv)
         return;
     }
 
-    dm_connection = std::make_shared<DMConnection>(io_service, c->from_dm_fd(), c->to_dm_fd());
+    dm_connection = std::make_shared<DMConnection>(io_service, c->dm_socket_fd());
 
     struct ScopeGuard
     {
