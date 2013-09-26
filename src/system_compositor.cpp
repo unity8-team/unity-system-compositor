@@ -19,6 +19,7 @@
 #include "system_compositor.h"
 
 #include <mir/run_mir.h>
+#include <mir/abnormal_exit.h>
 #include <mir/pause_resume_listener.h>
 #include <mir/shell/application_session.h>
 #include <mir/shell/session.h>
@@ -26,11 +27,17 @@
 #include <mir/shell/focus_setter.h>
 #include <mir/input/cursor_listener.h>
 
+#include <cerrno>
 #include <iostream>
+#include <sys/stat.h>
 #include <thread>
+#include <regex.h>
+#include <GLES2/gl2.h>
+#include <boost/algorithm/string.hpp>
 
 namespace msh = mir::shell;
 namespace mi = mir::input;
+namespace po = boost::program_options;
 
 class SystemCompositorServerConfiguration : public mir::DefaultServerConfiguration
 {
@@ -38,12 +45,11 @@ public:
     SystemCompositorServerConfiguration(SystemCompositor *compositor, int argc, char const** argv)
         : mir::DefaultServerConfiguration(argc, argv), compositor{compositor}
     {
-        namespace po = boost::program_options;
-
         add_options()
             ("dm-socket-fd", po::value<int>(),  "File descriptor of socket to display manager [int]")
-        add_options()
-            ("version", "Show version of Unity System Compositor");
+            ("blacklist", po::value<std::string>(), "Video blacklist regex to use")
+            ("version", "Show version of Unity System Compositor")
+            ("public-socket", po::value<bool>(), "Make the socket file publicly writable");
     }
 
     int dm_socket_fd()
@@ -55,7 +61,25 @@ public:
     {
         return the_options()->is_set ("version");
     }
-    
+
+    std::string blacklist()
+    {
+        auto x = the_options()->get ("blacklist", "");
+        boost::trim(x);
+        return x;
+    }
+
+    bool public_socket()
+    {
+        return the_options()->get("public-socket", false);
+    }
+
+    void parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const override
+    {
+        mir::DefaultServerConfiguration::parse_options(options_description, options);
+        options.parse_file(options_description, "unity-system-compositor.conf");
+    }
+
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
     {
         struct NullCursorListener : public mi::CursorListener
@@ -88,9 +112,48 @@ public:
         return std::make_shared<PauseResumeListener>(compositor);
     }
 
+    std::string get_socket_file()
+    {
+        // the_socket_file is private, so we have to re-implement it here
+        return the_options()->get("file", "/tmp/mir_socket");
+    }
+
 private:
     SystemCompositor *compositor;
 };
+
+bool check_blacklist(std::string blacklist, const char *vendor, const char *renderer, const char *version)
+{
+    if (blacklist.empty())
+        return true;
+
+    std::cerr << "Using blacklist \"" << blacklist << "\"" << std::endl;
+
+    regex_t re;
+    auto result = regcomp (&re, blacklist.c_str(), REG_EXTENDED);
+    if (result == 0)
+    {
+        char driver_string[1024];
+        snprintf (driver_string, 1024, "%s\n%s\n%s",
+                  vendor ? vendor : "",
+                  renderer ? renderer : "",
+                  version ? version : "");
+
+        auto result = regexec (&re, driver_string, 0, NULL, 0);
+        regfree (&re);
+
+        if (result == 0)
+            return false;
+    }
+    else
+    {
+        char error_string[1024];
+        regerror (result, &re, error_string, 1024);
+        std::cerr << "Failed to compile blacklist regex: " << error_string << std::endl;
+    }
+
+    return true;
+}
 
 void SystemCompositor::run(int argc, char const** argv)
 {
@@ -116,6 +179,16 @@ void SystemCompositor::run(int argc, char const** argv)
 
     mir::run_mir(*config, [&](mir::DisplayServer&)
         {
+            auto vendor = (char *) glGetString(GL_VENDOR);
+            auto renderer = (char *) glGetString (GL_RENDERER);
+            auto version = (char *) glGetString (GL_VERSION);
+            std::cerr << "GL_VENDOR = " << vendor << std::endl;
+            std::cerr << "GL_RENDERER = " << renderer << std::endl;
+            std::cerr << "GL_VERSION = " << version << std::endl;
+
+            if (!check_blacklist(c->blacklist(), vendor, renderer, version))
+                throw mir::AbnormalExit ("Video driver is blacklisted, exiting");
+
             guard.thread = std::thread(&SystemCompositor::main, this);
         });
 }
@@ -179,6 +252,13 @@ void SystemCompositor::set_next_session(std::string client_name)
 
 void SystemCompositor::main()
 {
+    // Make socket world-writable, since users need to talk to us.  No worries
+    // about race condition, since we are adding permissions, not restricting
+    // them.
+    auto usc_config = std::static_pointer_cast<SystemCompositorServerConfiguration>(config);
+    if (usc_config->public_socket() && chmod(usc_config->get_socket_file().c_str(), 0777) == -1)
+        std::cerr << "Unable to chmod socket file " << usc_config->get_socket_file() << ": " << strerror(errno) << std::endl;
+
     dm_connection->set_handler(this);
     dm_connection->start();
     dm_connection->send_ready();
