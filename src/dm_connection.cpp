@@ -147,18 +147,9 @@ void DMConnection::send_fd(int fd)
     char dummy_iov_data = '\0';
     struct iovec iov;
     struct msghdr header;
-    struct cmsgdata
-    {
-        int fd;
-    };
-    struct control_message
-    {
-        struct cmsghdr header;
-        struct cmsgdata data;
-    };
     struct cmsghdr *control_header;
-    struct cmsgdata *control_data;
-    struct control_message message;
+    int *control_data;
+    void *message;
 
     /* Send dummy data */
     iov.iov_base = &dummy_iov_data;
@@ -168,16 +159,19 @@ void DMConnection::send_fd(int fd)
     memset (&header, 0, sizeof (header));
     header.msg_iov = &iov;
     header.msg_iovlen = 1;
-    header.msg_control = &message;
-    header.msg_controllen = sizeof (message);
+    header.msg_controllen = sizeof (struct cmsghdr) + sizeof (int);
+    message = malloc (header.msg_controllen);
+    header.msg_control = message;
     control_header = CMSG_FIRSTHDR (&header);
-    control_header->cmsg_len = sizeof (message);
+    control_header->cmsg_len = header.msg_controllen;
     control_header->cmsg_level = SOL_SOCKET;
     control_header->cmsg_type = SCM_RIGHTS;
 
-    control_data = (struct cmsgdata*) CMSG_DATA (control_header);
-    control_data->fd = fd;
+    control_data = (int*) CMSG_DATA (control_header);
+    *control_data = fd;
 
     if (sendmsg (dm_socket.native_handle(), &header, 0) < 0)
-        fprintf (stderr, "Failed to send file descriptor: %s\n", strerror (errno));
+        std::cerr << "Failed to send file descriptor: " << strerror (errno) << std::endl;
+  
+    free (message);
 }
