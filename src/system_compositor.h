@@ -41,6 +41,7 @@ private:
 
     void set_active_session(std::string client_name);
     void set_next_session(std::string client_name);
+    int add_session();
     void main();
 };
 

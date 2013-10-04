@@ -26,6 +26,7 @@ class DMMessageHandler
 public:
     virtual void set_active_session(std::string client_name) = 0;
     virtual void set_next_session(std::string client_name) = 0;
+    virtual int add_session() = 0;
 };
 
 class NullDMMessageHandler : public DMMessageHandler
@@ -33,6 +34,7 @@ class NullDMMessageHandler : public DMMessageHandler
 public:
     void set_active_session(std::string client_name) {};
     void set_next_session(std::string client_name) {};
+    int add_session() { return -1; };
 };
 
 enum class USCMessageID
@@ -43,6 +45,8 @@ enum class USCMessageID
     session_connected = 3,
     set_active_session = 4,
     set_next_session = 5,
+    add_session = 6,
+    session_added = 7,
 };
 
 class DMConnection
@@ -72,6 +76,7 @@ private:
     void on_read_header(const boost::system::error_code& ec);
     void on_read_payload(const boost::system::error_code& ec);
     void send(USCMessageID id, std::string const& body);
+    void send_fd(int fd);
 };
 
 #endif /* DM_CONNECTION_H_ */

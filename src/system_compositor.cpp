@@ -26,6 +26,7 @@
 #include <mir/shell/session_container.h>
 #include <mir/shell/focus_setter.h>
 #include <mir/input/cursor_listener.h>
+#include <mir/frontend/connector.h>
 
 #include <cerrno>
 #include <iostream>
@@ -249,6 +250,11 @@ void SystemCompositor::set_next_session(std::string client_name)
         ; // TODO: implement this
     else
         std::cerr << "Unable to set next session, unknown client name " << client_name << std::endl;
+}
+
+int SystemCompositor::add_session()
+{
+    return config->the_connector()->client_socket_fd();
 }
 
 void SystemCompositor::main()
