@@ -80,11 +80,10 @@ public:
         return the_options()->get("public-socket", false);
     }
 
-    void parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const override
+    std::shared_ptr<mir::options::Option> the_options() const override
     {
         setenv("MIR_SERVER_STANDALONE", "true", 0); // Default to standalone
-        mir::DefaultServerConfiguration::parse_options(options_description, options);
-        options.parse_file(options_description, "unity-system-compositor.conf");
+        return mir::DefaultServerConfiguration::the_options();
     }
 
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
