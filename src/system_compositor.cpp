@@ -106,11 +106,6 @@ public:
         return the_options()->get("to-dm-fd", -1);
     }
 
-    bool show_version()
-    {
-        return the_options()->is_set ("version");
-    }
-
     std::string blacklist()
     {
         auto x = the_options()->get ("blacklist", "");
@@ -128,6 +123,11 @@ public:
         setenv("MIR_SERVER_STANDALONE", "true", 0); // Default to standalone
         mir::DefaultServerConfiguration::parse_options(options_description, options);
         options.parse_file(options_description, "unity-system-compositor.conf");
+
+        if (options.is_set("version"))
+        {
+            throw mir::AbnormalExit (std::string("unity-system-compositor ") + USC_VERSION);
+        }
     }
 
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
@@ -225,41 +225,33 @@ bool check_blacklist(std::string blacklist, const char *vendor, const char *rend
     return true;
 }
 
-void SystemCompositor::run(int argc, char const** argv)
+SystemCompositor::SystemCompositor(int argc, char const** argv) :
+    config{new SystemCompositorServerConfiguration(this, argc, argv)},
+    shell{config->the_system_compositor_shell()},
+    dm_connection{std::make_shared<DMConnection>(io_service, config->from_dm_fd(), config->to_dm_fd())}
 {
-    config = std::make_shared<SystemCompositorServerConfiguration>(this, argc, argv);
-  
-    if (config->show_version())
-    {
-        std::cerr << "unity-system-compositor " << USC_VERSION << std::endl;
-        return;
-    }
+    auto vendor = (char *) glGetString(GL_VENDOR);
+    auto renderer = (char *) glGetString (GL_RENDERER);
+    auto version = (char *) glGetString (GL_VERSION);
+    std::cerr << "GL_VENDOR = " << vendor << std::endl;
+    std::cerr << "GL_RENDERER = " << renderer << std::endl;
+    std::cerr << "GL_VERSION = " << version << std::endl;
 
-    dm_connection = std::make_shared<DMConnection>(io_service, config->from_dm_fd(), config->to_dm_fd());
+    if (!check_blacklist(config->blacklist(), vendor, renderer, version))
+        throw mir::AbnormalExit ("Video driver is blacklisted, exiting");
+}
 
-    struct ScopeGuard
-    {
-        explicit ScopeGuard(boost::asio::io_service& io_service) : io_service(io_service) {}
-        ~ScopeGuard() { io_service.stop(); if (thread.joinable()) thread.join(); }
+SystemCompositor::~SystemCompositor() noexcept
+{
+    io_service.stop();
+    if (thread.joinable()) thread.join();
+}
 
-        boost::asio::io_service& io_service;
-        std::thread thread;
-    } guard(io_service);
-
-    mir::run_mir(*config, [&](mir::DisplayServer&)
+void SystemCompositor::run()
+{
+    mir::run_mir(*config, [this](mir::DisplayServer&)
         {
-            auto vendor = (char *) glGetString(GL_VENDOR);
-            auto renderer = (char *) glGetString (GL_RENDERER);
-            auto version = (char *) glGetString (GL_VERSION);
-            std::cerr << "GL_VENDOR = " << vendor << std::endl;
-            std::cerr << "GL_RENDERER = " << renderer << std::endl;
-            std::cerr << "GL_VERSION = " << version << std::endl;
-
-            if (!check_blacklist(config->blacklist(), vendor, renderer, version))
-                throw mir::AbnormalExit ("Video driver is blacklisted, exiting");
-
-            shell = config->the_system_compositor_shell();
-            guard.thread = std::thread(&SystemCompositor::main, this);
+            thread = std::thread(&SystemCompositor::main, this);
         });
 }
 
@@ -283,6 +275,7 @@ void SystemCompositor::set_active_session(std::string client_name)
 {
     std::cerr << "set_active_session" << std::endl;
 
+    // TODO the Mir Session hierarchy is odd - we shouldn't really need this cast.
     active_session = std::static_pointer_cast<mir::shell::Session>(shell->session_named(client_name));
 
     if (active_session)

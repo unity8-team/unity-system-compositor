@@ -23,8 +23,9 @@
 int main(int argc, char const* argv[])
 try
 {
-    SystemCompositor system_compositor;
-    system_compositor.run(argc, argv);
+    SystemCompositor system_compositor(argc, argv);
+
+    system_compositor.run();
 
     return 0;
 }

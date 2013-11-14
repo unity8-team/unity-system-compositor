@@ -21,6 +21,8 @@
 
 #include "dm_connection.h"
 
+#include <thread>
+
 namespace mir { namespace shell { class Session; } }
 
 class SystemCompositorShell;
@@ -29,15 +31,19 @@ class SystemCompositorServerConfiguration;
 class SystemCompositor : public DMMessageHandler
 {
 public:
-    void run(int argc, char const** argv);
+    SystemCompositor(int argc, char const** argv);
+    ~SystemCompositor() noexcept;
+    void run();
     void pause();
     void resume();
 
 private:
-    std::shared_ptr<SystemCompositorServerConfiguration> config;
-    std::shared_ptr<SystemCompositorShell> shell;
+    std::unique_ptr<SystemCompositorServerConfiguration> const config;
+    std::shared_ptr<SystemCompositorShell> const shell;
+    std::shared_ptr<DMConnection> const dm_connection;
+
     boost::asio::io_service io_service;
-    std::shared_ptr<DMConnection> dm_connection;
+    std::thread thread;
     std::shared_ptr<mir::shell::Session> active_session;
 
     void set_active_session(std::string client_name);
