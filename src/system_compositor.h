@@ -38,17 +38,21 @@ public:
     void resume();
 
 private:
+    int argc;
+    char const** const argv;
     std::unique_ptr<SystemCompositorServerConfiguration> const config;
     std::shared_ptr<SystemCompositorShell> const shell;
     std::shared_ptr<DMConnection> const dm_connection;
 
     boost::asio::io_service io_service;
     std::thread thread;
+    std::thread qt_thread;
     std::shared_ptr<mir::shell::Session> active_session;
 
     void set_active_session(std::string client_name);
     void set_next_session(std::string client_name);
     void main();
+    void qt_main();
 };
 
 #endif /* SYSTEM_COMPOSITOR_H_ */

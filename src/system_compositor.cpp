@@ -16,6 +16,7 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
+#include "dbus_screen.h"
 #include "system_compositor.h"
 
 #include <mir/run_mir.h>
@@ -34,6 +35,7 @@
 #include <regex.h>
 #include <GLES2/gl2.h>
 #include <boost/algorithm/string.hpp>
+#include <QCoreApplication>
 
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -226,6 +228,8 @@ bool check_blacklist(std::string blacklist, const char *vendor, const char *rend
 }
 
 SystemCompositor::SystemCompositor(int argc, char const** argv) :
+    argc(argc),
+    argv(argv),
     config{new SystemCompositorServerConfiguration(this, argc, argv)},
     shell{config->the_system_compositor_shell()},
     dm_connection{std::make_shared<DMConnection>(io_service, config->from_dm_fd(), config->to_dm_fd())}
@@ -245,6 +249,7 @@ SystemCompositor::~SystemCompositor() noexcept
 {
     io_service.stop();
     if (thread.joinable()) thread.join();
+    if (qt_thread.joinable()) qt_thread.join();
 }
 
 void SystemCompositor::run()
@@ -252,6 +257,7 @@ void SystemCompositor::run()
     mir::run_mir(*config, [this](mir::DisplayServer&)
         {
             thread = std::thread(&SystemCompositor::main, this);
+            qt_thread = std::thread(&SystemCompositor::qt_main, this);
         });
 }
 
@@ -307,4 +313,11 @@ void SystemCompositor::main()
     dm_connection->send_ready();
 
     io_service.run();
+}
+
+void SystemCompositor::qt_main()
+{
+    QCoreApplication app(argc, const_cast<char**>(argv));
+    DBusScreen dbus_screen(*config);
+    app.exec();
 }
