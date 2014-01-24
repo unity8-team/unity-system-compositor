@@ -37,7 +37,7 @@ void DMConnection::send_ready()
 
 void DMConnection::read_header()
 {
-    ba::async_read(from_dm_pipe,
+    ba::async_read(dm_socket,
                    ba::buffer(message_header_bytes),
                    boost::bind(&DMConnection::on_read_header,
                                this,
@@ -49,7 +49,7 @@ void DMConnection::on_read_header(const bs::error_code& ec)
     if (!ec)
     {
         size_t const payload_length = message_header_bytes[2] << 8 | message_header_bytes[3];
-        ba::async_read(from_dm_pipe,
+        ba::async_read(dm_socket,
                        message_payload_buffer,
                        ba::transfer_exactly(payload_length),
                        boost::bind(&DMConnection::on_read_payload,
@@ -100,6 +100,17 @@ void DMConnection::on_read_payload(const bs::error_code& ec)
                 handler->set_next_session(client_name);
             break;
         }
+        case USCMessageID::add_session:
+        {
+            std::cerr << "add_session" << std::endl;
+            if (handler)
+            {
+                auto fd = handler->add_session();
+                send(USCMessageID::session_added, "");
+                send_fd(fd);
+            }
+            break;
+        }
         default:
             std::cerr << "Ignoring unknown message " << (uint16_t) message_id << " with " << payload_length << " octets" << std::endl;
             break;
@@ -128,5 +139,39 @@ void DMConnection::send(USCMessageID id, std::string const& body)
     std::copy(body.begin(), body.end(), write_buffer.begin() + sizeof header_bytes);
 
     // FIXME: Make asynchronous
-    ba::write(to_dm_pipe, ba::buffer(write_buffer));
+    ba::write(dm_socket, ba::buffer(write_buffer));
+}
+
+void DMConnection::send_fd(int fd)
+{
+    char dummy_iov_data = '\0';
+    struct iovec iov;
+    struct msghdr header;
+    struct cmsghdr *control_header;
+    int *control_data;
+    void *message;
+
+    /* Send dummy data */
+    iov.iov_base = &dummy_iov_data;
+    iov.iov_len = 1;
+
+    /* Send control message with file descriptor */
+    memset (&header, 0, sizeof (header));
+    header.msg_iov = &iov;
+    header.msg_iovlen = 1;
+    header.msg_controllen = sizeof (struct cmsghdr) + sizeof (int);
+    message = malloc (header.msg_controllen);
+    header.msg_control = message;
+    control_header = CMSG_FIRSTHDR (&header);
+    control_header->cmsg_len = header.msg_controllen;
+    control_header->cmsg_level = SOL_SOCKET;
+    control_header->cmsg_type = SCM_RIGHTS;
+
+    control_data = (int*) CMSG_DATA (control_header);
+    *control_data = fd;
+
+    if (sendmsg (dm_socket.native_handle(), &header, 0) < 0)
+        std::cerr << "Failed to send file descriptor: " << strerror (errno) << std::endl;
+  
+    free (message);
 }

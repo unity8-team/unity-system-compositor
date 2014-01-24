@@ -26,6 +26,7 @@ class DMMessageHandler
 public:
     virtual void set_active_session(std::string client_name) = 0;
     virtual void set_next_session(std::string client_name) = 0;
+    virtual int add_session() = 0;
 };
 
 enum class USCMessageID
@@ -36,14 +37,15 @@ enum class USCMessageID
     session_connected = 3,
     set_active_session = 4,
     set_next_session = 5,
+    add_session = 6,
+    session_added = 7,
 };
 
 class DMConnection
 {
 public:
-    DMConnection(boost::asio::io_service& io_service, int from_dm_fd, int to_dm_fd) :
-        from_dm_pipe(io_service, from_dm_fd),
-        to_dm_pipe(io_service, to_dm_fd) {};
+    DMConnection(boost::asio::io_service& io_service, int dm_socket_fd) :
+        dm_socket(io_service, dm_socket_fd) {};
 
     void set_handler(DMMessageHandler *handler)
     {
@@ -56,8 +58,7 @@ public:
 
 private:
     DMMessageHandler *handler;
-    boost::asio::posix::stream_descriptor from_dm_pipe;
-    boost::asio::posix::stream_descriptor to_dm_pipe;
+    boost::asio::posix::stream_descriptor dm_socket;
     static size_t const size_of_header = 4;
     unsigned char message_header_bytes[size_of_header];
     boost::asio::streambuf message_payload_buffer;
@@ -67,6 +68,7 @@ private:
     void on_read_header(const boost::system::error_code& ec);
     void on_read_payload(const boost::system::error_code& ec);
     void send(USCMessageID id, std::string const& body);
+    void send_fd(int fd);
 };
 
 #endif /* DM_CONNECTION_H_ */

@@ -27,6 +27,7 @@
 #include <mir/shell/session.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/input/cursor_listener.h>
+#include <mir/frontend/connector.h>
 
 #include <cerrno>
 #include <iostream>
@@ -91,21 +92,15 @@ public:
         : mir::DefaultServerConfiguration(argc, (char const **)argv), compositor{compositor}
     {
         add_options()
-            ("from-dm-fd", po::value<int>(),  "File descriptor of read end of pipe from display manager [int]")
-            ("to-dm-fd", po::value<int>(),  "File descriptor of write end of pipe to display manager [int]")
+            ("dm-socket-fd", po::value<int>(),  "File descriptor of socket to display manager [int]")
             ("blacklist", po::value<std::string>(), "Video blacklist regex to use")
             ("version", "Show version of Unity System Compositor")
             ("public-socket", po::value<bool>(), "Make the socket file publicly writable");
     }
 
-    int from_dm_fd()
+    int dm_socket_fd()
     {
-        return the_options()->get("from-dm-fd", -1);
-    }
-
-    int to_dm_fd()
-    {
-        return the_options()->get("to-dm-fd", -1);
+        return the_options()->get("dm-socket-fd", -1);
     }
 
     bool show_version()
@@ -237,7 +232,7 @@ void SystemCompositor::run(int argc, char **argv)
         return;
     }
 
-    dm_connection = std::make_shared<DMConnection>(io_service, config->from_dm_fd(), config->to_dm_fd());
+    dm_connection = std::make_shared<DMConnection>(io_service, config->dm_socket_fd());
 
     struct ScopeGuard
     {
@@ -310,6 +305,11 @@ void SystemCompositor::set_next_session(std::string client_name)
         ; // TODO: implement this
     else
         std::cerr << "Unable to set next session, unknown client name " << client_name << std::endl;
+}
+
+int SystemCompositor::add_session()
+{
+    return config->the_connector()->client_socket_fd();
 }
 
 void SystemCompositor::main()
