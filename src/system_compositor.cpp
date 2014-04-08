@@ -102,7 +102,7 @@ private:
 
     mf::SurfaceId create_surface_for(
         std::shared_ptr<mf::Session> const& session,
-        msh::SurfaceCreationParameters const& params)
+        ms::SurfaceCreationParameters const& params)
     {
         return self->create_surface_for(session, params);
     }
