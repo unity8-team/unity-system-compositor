@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,7 +25,7 @@
 #include <mir/options/default_configuration.h>
 #include <mir/frontend/shell.h>
 #include <mir/server_status_listener.h>
-#include <mir/shell/session.h>
+#include <mir/scene/session.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/input/cursor_listener.h>
 
@@ -38,6 +38,7 @@
 #include <boost/algorithm/string.hpp>
 #include <QCoreApplication>
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -60,7 +61,7 @@ public:
     {
         active_session = name;
 
-        if (auto session = std::static_pointer_cast<msh::Session>(session_named(name)))
+        if (auto session = std::static_pointer_cast<ms::Session>(session_named(name)))
             focus_controller->set_focus_to(session);
         else
             std::cerr << "Unable to set active session, unknown client name " << name << std::endl;
@@ -68,7 +69,7 @@ public:
 
     void set_next_session(std::string const& name)
     {
-        if (auto const session = std::static_pointer_cast<msh::Session>(session_named(name)))
+        if (auto const session = std::static_pointer_cast<ms::Session>(session_named(name)))
         {
             focus_controller->set_focus_to(session); // raise session inside its depth id set
             set_active_session(active_session); // to restore input focus to where it should be
@@ -101,7 +102,7 @@ private:
 
     mf::SurfaceId create_surface_for(
         std::shared_ptr<mf::Session> const& session,
-        msh::SurfaceCreationParameters const& params)
+        ms::SurfaceCreationParameters const& params)
     {
         return self->create_surface_for(session, params);
     }
