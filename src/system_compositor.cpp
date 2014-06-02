@@ -153,24 +153,16 @@ public:
     float alpha() const {return self->alpha();}
     void set_alpha(float alpha) {self->set_alpha(alpha);}
     void with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& exec) {self->with_most_recent_buffer_do(exec);}
+    std::unique_ptr<mg::Renderable> compositor_snapshot(void const* compositor_id) const { return self->compositor_snapshot(compositor_id); }
 
     // msc::Surface methods
     std::shared_ptr<mi::InputChannel> input_channel() const {return self->input_channel();}
     void add_observer(std::shared_ptr<msc::SurfaceObserver> const& observer) {self->add_observer(observer);}
-    void remove_observer(std::shared_ptr<msc::SurfaceObserver> const& observer) {self->remove_observer(observer);}
+    void remove_observer(std::weak_ptr<msc::SurfaceObserver> const& observer) {self->remove_observer(observer);}
 
     // mi::Surface methods
     bool contains(geom::Point const& point) const {return self->contains(point);}
-
-    // mg::Renderable methods
-    std::shared_ptr<mg::Buffer> buffer(void const* user_id) const {return self->buffer(user_id);}
-    bool alpha_enabled() const {return self->alpha_enabled();}
-    geom::Rectangle screen_position() const {return self->screen_position();}
-    glm::mat4 transformation() const {return self->transformation();}
-    bool visible() const {return self->visible();}
-    bool shaped() const {return self->shaped();}
-    int buffers_ready_for_compositor() const {return self->buffers_ready_for_compositor();}
-    mg::Renderable::ID id() const {return self->id();}
+    void consume(MirEvent const& event) { self->consume(event);}
 
 private:
     std::shared_ptr<msc::Surface> const self;
@@ -358,7 +350,7 @@ public:
                           std::shared_ptr<SystemCompositorShell> shell)
         : self{self}, shell{shell} {}
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList renderable_list_for(CompositorID id) const
     {
         mg::RenderableList list;
         std::shared_ptr<SystemCompositorSession> session;
@@ -367,20 +359,21 @@ public:
         if (session)
         {
             for (auto const& surface : session->get_surfaces())
-                list.emplace_back(surface);
+                list.emplace_back(surface->compositor_snapshot(id));
         }
 
         session = shell->get_active_session();
         if (session)
         {
             for (auto const& surface : session->get_surfaces())
-                list.emplace_back(surface);
+                list.emplace_back(surface->compositor_snapshot(id));
         }
 
         return list;
     }
 
-    void set_change_callback(std::function<void()> const& f) {self->set_change_callback(f);}
+    void add_observer(std::shared_ptr<msc::Observer> const& observer) { self->add_observer(observer);}
+    void remove_observer(std::weak_ptr<msc::Observer> const& observer) { self->remove_observer(observer);}
 
 private:
     std::shared_ptr<mc::Scene> const self;
