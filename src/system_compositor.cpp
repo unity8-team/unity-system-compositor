@@ -120,6 +120,16 @@ public:
         return self;
     }
 
+    void set_cursor_image(std::shared_ptr<mg::CursorImage> const& image) override
+    {
+        self->set_cursor_image(image);
+    }
+    
+    std::shared_ptr<mg::CursorImage> cursor_image() override
+    {
+        return self->cursor_image();
+    }
+
     void swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete) override
     {
         self->swap_buffers(old_buffer, complete);
