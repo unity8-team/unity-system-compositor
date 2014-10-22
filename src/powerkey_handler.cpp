@@ -67,12 +67,23 @@ void PowerKeyHandler::power_key_down()
 
 void PowerKeyHandler::power_key_up()
 {
+    using namespace std::chrono;
+    static auto prev_tp = steady_clock::now();
+    static std::chrono::milliseconds ignore_repeat_keyups_time_window{100};
+
+    auto time_after_last_key_up = duration_cast<milliseconds>(steady_clock::now() - prev_tp);
+
     std::lock_guard<std::mutex> lock{guard};
-    shutdown_alarm->cancel();
-    long_press_alarm->cancel();
-    if (!long_press_detected)
+    if (time_after_last_key_up > ignore_repeat_keyups_time_window)
     {
-        screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
+        shutdown_alarm->cancel();
+        long_press_alarm->cancel();
+
+        if (!long_press_detected)
+        {
+            screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
+        }
+        prev_tp = steady_clock::now();
     }
 }
 
