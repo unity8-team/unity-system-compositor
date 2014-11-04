@@ -17,6 +17,8 @@
 #ifndef DBUS_SCREEN_OBSERVER_H_
 #define DBUS_SCREEN_OBSERVER_H_
 
+#include "mir_toolkit/common.h"
+
 enum class PowerStateChangeReason;
 
 class DBusScreenObserver
@@ -25,6 +27,7 @@ public:
     virtual ~DBusScreenObserver() = default;
 
     virtual void set_screen_power_mode(MirPowerMode mode, PowerStateChangeReason reason) = 0;
+    virtual void toggle_screen_power_mode(PowerStateChangeReason reason) = 0;
     virtual void keep_display_on(bool on) = 0;
     virtual void set_brightness(int brightness) = 0;
     virtual void enable_auto_brightness(bool enable) = 0;

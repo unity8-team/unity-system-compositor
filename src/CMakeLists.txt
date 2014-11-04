@@ -20,12 +20,14 @@ set(USC_SRCS
   external_spinner.cpp
   powerd_mediator.cpp
   powerkey_handler.cpp
+  powerkey_mediator.cpp
   screen_state_handler.cpp
   server_configuration.cpp
   session_coordinator.cpp
   session_switcher.cpp
   surface_coordinator.cpp
   system_compositor.cpp
+  system_impl.cpp
   worker_thread.cpp
 )
 

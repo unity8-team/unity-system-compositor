@@ -26,7 +26,6 @@
 
 namespace mir
 {
-class DefaultServerConfiguration;
 namespace time
 {
 class Alarm;
@@ -34,7 +33,7 @@ class Timer;
 }
 }
 
-class ScreenStateHandler;
+class PowerKeyStateListener;
 
 class PowerKeyHandler : public mir::input::EventFilter
 {
@@ -42,11 +41,13 @@ public:
     PowerKeyHandler(mir::time::Timer& timer,
                     std::chrono::milliseconds power_key_ignore_timeout,
                     std::chrono::milliseconds shutdown_timeout,
-                    ScreenStateHandler& screen_state_handler);
+                    PowerKeyStateListener& listener);
 
     ~PowerKeyHandler();
 
     bool handle(MirEvent const& event) override;
+
+    static const int32_t POWER_KEY_CODE = 26;
 
 private:
     void power_key_up();
@@ -54,17 +55,23 @@ private:
     void shutdown_alarm_notification();
     void long_press_notification();
 
-    std::mutex guard;
-    std::atomic<bool> long_press_detected;
+    enum class KeyState
+    {
+        Released,
+        Pressed,
+        LongPressed,
+        VeryLongPressed
+    };
+    bool try_transistion(KeyState from, KeyState to);
 
-    ScreenStateHandler* screen_state_handler;
+    std::atomic<KeyState> power_key;
 
     std::chrono::milliseconds power_key_ignore_timeout;
     std::chrono::milliseconds shutdown_timeout;
 
     std::unique_ptr<mir::time::Alarm> shutdown_alarm;
     std::unique_ptr<mir::time::Alarm> long_press_alarm;
-
+    PowerKeyStateListener* key_state_listener;
 };
 
 #endif

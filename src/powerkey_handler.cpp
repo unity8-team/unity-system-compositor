@@ -15,36 +15,34 @@
  */
 
 #include "powerkey_handler.h"
-#include "screen_state_handler.h"
-#include "power_state_change_reason.h"
+#include "powerkey_state_listener.h"
 
 #include <mir/time/timer.h>
-
-#include <cstdio>
-#include "dbus_screen.h"
-#include "powerd_mediator.h"
 
 namespace mi = mir::input;
 
 PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
                                  std::chrono::milliseconds power_key_ignore_timeout,
                                  std::chrono::milliseconds shutdown_timeout,
-                                 ScreenStateHandler& screen_state_handler)
-    : long_press_detected{false},
-      screen_state_handler{&screen_state_handler},
+                                 PowerKeyStateListener& listener)
+    : power_key{KeyState::Released},
       power_key_ignore_timeout{power_key_ignore_timeout},
       shutdown_timeout{shutdown_timeout},
       shutdown_alarm{timer.create_alarm([this]{ shutdown_alarm_notification(); })},
-      long_press_alarm{timer.create_alarm([this]{ long_press_notification(); })}
+      long_press_alarm{timer.create_alarm([this]{ long_press_notification(); })},
+      key_state_listener{&listener}
 {
+    if (power_key_ignore_timeout > shutdown_timeout)
+        throw std::invalid_argument("shutdown timeout must be larger than power key ignore timeout");
+    if (power_key_ignore_timeout.count() == 0 ||
+        shutdown_timeout.count() == 0)
+        throw std::invalid_argument("timeouts must be non-zero");
 }
 
 PowerKeyHandler::~PowerKeyHandler() = default;
 
 bool PowerKeyHandler::handle(MirEvent const& event)
 {
-    static const int32_t POWER_KEY_CODE = 26;
-
     if (event.type == mir_event_type_key &&
         event.key.key_code == POWER_KEY_CODE)
     {
@@ -58,34 +56,50 @@ bool PowerKeyHandler::handle(MirEvent const& event)
 
 void PowerKeyHandler::power_key_down()
 {
-    std::lock_guard<std::mutex> lock{guard};
-    screen_state_handler->enable_inactivity_timers(false);
-    long_press_detected = false;
-    long_press_alarm->reschedule_in(power_key_ignore_timeout);
-    shutdown_alarm->reschedule_in(shutdown_timeout);
+    if (try_transistion(KeyState::Released, KeyState::Pressed))
+    {
+        long_press_alarm->reschedule_in(power_key_ignore_timeout);
+        shutdown_alarm->reschedule_in(shutdown_timeout);
+        key_state_listener->power_key_down();
+    }
 }
 
 void PowerKeyHandler::power_key_up()
 {
-    std::lock_guard<std::mutex> lock{guard};
-    shutdown_alarm->cancel();
-    long_press_alarm->cancel();
-    if (!long_press_detected)
+    if (try_transistion(KeyState::Pressed, KeyState::Released))
     {
-        screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
+        shutdown_alarm->cancel();
+        long_press_alarm->cancel();
+        key_state_listener->power_key_short();
     }
+    else if (try_transistion(KeyState::LongPressed, KeyState::Released))
+    {
+        shutdown_alarm->cancel();
+    }
+    else if (try_transistion(KeyState::VeryLongPressed, KeyState::Released))
+    {
+        // both alarms already fired
+    }
+    key_state_listener->power_key_up();
 }
 
 void PowerKeyHandler::shutdown_alarm_notification()
 {
-    screen_state_handler->set_screen_power_mode(
-        MirPowerMode::mir_power_mode_off, PowerStateChangeReason::power_key);
-    system("shutdown -P now");
+    if (try_transistion(KeyState::LongPressed, KeyState::VeryLongPressed))
+    {
+        key_state_listener->power_key_very_long();
+    }
 }
 
 void PowerKeyHandler::long_press_notification()
 {
-    screen_state_handler->set_screen_power_mode(
-        MirPowerMode::mir_power_mode_on, PowerStateChangeReason::power_key);
-    long_press_detected = true;
+    if (try_transistion(KeyState::Pressed, KeyState::LongPressed))
+    {
+        key_state_listener->power_key_long();
+    }
+}
+
+bool PowerKeyHandler::try_transistion(KeyState from, KeyState to)
+{
+    return std::atomic_compare_exchange_strong(&power_key, &from, to);
 }

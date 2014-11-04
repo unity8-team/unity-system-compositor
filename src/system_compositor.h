@@ -21,8 +21,10 @@
 #define USC_SYSTEM_COMPOSITOR_H_
 
 #include <memory>
+#include "system_impl.h"
 
 class ScreenStateHandler;
+class PowerKeyMediator;
 class PowerKeyHandler;
 
 namespace usc
@@ -46,7 +48,9 @@ private:
     std::shared_ptr<DMConnection> const dm_connection;
     std::shared_ptr<Spinner> const spinner;
     std::shared_ptr<ScreenStateHandler> screen_state_handler;
+    std::shared_ptr<PowerKeyMediator> power_key_mediator;
     std::shared_ptr<PowerKeyHandler> power_key_handler;
+    SystemImpl system_impl;
 };
 
 }

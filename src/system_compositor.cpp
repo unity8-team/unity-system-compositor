@@ -24,6 +24,7 @@
 #include "spinner.h"
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
+#include "powerkey_mediator.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -159,10 +160,13 @@ void usc::SystemCompositor::qt_main()
             std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_off_timeout),
             std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_dim_timeout));
 
+        power_key_mediator = std::make_shared<PowerKeyMediator>(*screen_state_handler, *screen_state_handler, system_impl);
+
         power_key_handler = std::make_shared<PowerKeyHandler>(*(config->the_main_loop()),
             power_key_ignore_timeout,
             shutdown_timeout,
-            *screen_state_handler);
+            *power_key_mediator
+            );
 
         auto composite_filter = config->the_composite_event_filter();
         composite_filter->append(screen_state_handler);

@@ -19,6 +19,7 @@
 
 #include "mir/input/event_filter.h"
 #include "dbus_screen_observer.h"
+#include "inactivty_tracker.h"
 
 #include <chrono>
 #include <memory>
@@ -38,7 +39,7 @@ class Timer;
 }
 }
 
-class ScreenStateHandler: public mir::input::EventFilter, public DBusScreenObserver
+class ScreenStateHandler: public mir::input::EventFilter, public DBusScreenObserver, public InactivtyTracker
 {
 public:
     ScreenStateHandler(std::shared_ptr<mir::DefaultServerConfiguration> const& config,
@@ -49,15 +50,15 @@ public:
     //from EventFilter
     bool handle(MirEvent const& event) override;
 
-    void enable_inactivity_timers(bool enable);
-    void toggle_screen_power_mode(PowerStateChangeReason reason);
+    void enable_inactivity_timers(bool enable) override;
 
     void set_screen_power_mode(MirPowerMode mode, PowerStateChangeReason reason) override;
+    void toggle_screen_power_mode(PowerStateChangeReason reason) override;
     void keep_display_on(bool on) override;
     void set_brightness(int brightness) override;
     void enable_auto_brightness(bool enable) override;
     void set_inactivity_timeouts(int power_off_timeout, int dimmer_timeout) override;
-    
+
     void set_touch_visualization_enabled(bool enabled) override;
 
 private:
