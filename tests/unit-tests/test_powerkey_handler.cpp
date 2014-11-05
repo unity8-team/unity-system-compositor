@@ -48,7 +48,7 @@ public:
     MOCK_METHOD1(create_alarm, std::unique_ptr<mti::Alarm>(std::function<void()>));
 };
 
-class MockPowerKeyStateListener : public PowerKeyStateListener
+class MockPowerKeyStateListener : public usc::PowerKeyStateListener
 {
 public:
     MOCK_METHOD0(power_key_down,void());
@@ -70,13 +70,13 @@ public:
                            );
 
         power_key_down_event.key.action = mir_key_action_down;
-        power_key_down_event.key.key_code = PowerKeyHandler::POWER_KEY_CODE;
+        power_key_down_event.key.key_code = usc::PowerKeyHandler::POWER_KEY_CODE;
 
         power_key_up_event.key.action = mir_key_action_up;
-        power_key_up_event.key.key_code = PowerKeyHandler::POWER_KEY_CODE;
+        power_key_up_event.key.key_code = usc::PowerKeyHandler::POWER_KEY_CODE;
 
         non_power_key.key.action = mir_key_action_down;
-        non_power_key.key.key_code = PowerKeyHandler::POWER_KEY_CODE + 1;
+        non_power_key.key.key_code = usc::PowerKeyHandler::POWER_KEY_CODE + 1;
     }
 
     std::unique_ptr<mti::Alarm> create_alarm(std::function<void()> callback)
@@ -117,12 +117,12 @@ TEST_F(TestPowerKeyHandler, creates_two_alarms)
 {
     using namespace ::testing;
     EXPECT_CALL(mock_timer,create_alarm(_)).Times(2);
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 }
 
 TEST_F(TestPowerKeyHandler, schedules_timers_on_power_key_down)
 {
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     EXPECT_CALL(*short_timeout,reschedule_in(short_delay)).Times(1);
     EXPECT_CALL(*long_timeout,reschedule_in(long_delay)).Times(1);
@@ -133,7 +133,7 @@ TEST_F(TestPowerKeyHandler, schedules_timers_on_power_key_down)
 TEST_F(TestPowerKeyHandler, re_schedules_and_cancel_timers)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
     EXPECT_CALL(*short_timeout,reschedule_in(short_delay)).InSequence(s);
@@ -160,7 +160,7 @@ TEST_F(TestPowerKeyHandler, re_schedules_and_cancel_timers)
 TEST_F(TestPowerKeyHandler, never_filters_key_events)
 {
     using namespace testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     EXPECT_THAT(key_handler.handle(power_key_down_event), Eq(false));
     EXPECT_THAT(key_handler.handle(power_key_up_event), Eq(false));
@@ -169,7 +169,7 @@ TEST_F(TestPowerKeyHandler, never_filters_key_events)
 
 TEST_F(TestPowerKeyHandler, cancels_timers_on_power_key_up)
 {
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     EXPECT_CALL(*long_timeout,cancel()).Times(1);
     EXPECT_CALL(*short_timeout,cancel()).Times(1);
@@ -181,14 +181,14 @@ TEST_F(TestPowerKeyHandler, cancels_timers_on_power_key_up)
 TEST_F(TestPowerKeyHandler, throws_on_wrong_timeouts)
 {
     EXPECT_THROW({
-    PowerKeyHandler key_handler(mock_timer, long_delay, short_delay, {&mock_key_state_listener});
+                 usc::PowerKeyHandler key_handler(mock_timer, long_delay, short_delay, {&mock_key_state_listener});
     }, std::invalid_argument);
 }
 
 TEST_F(TestPowerKeyHandler, ignores_spurious_up_down_events)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence seq;
 
@@ -211,7 +211,7 @@ TEST_F(TestPowerKeyHandler, ignores_spurious_up_down_events)
 
 TEST_F(TestPowerKeyHandler, forwards_down_events_to_key_state_listener)
 {
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     EXPECT_CALL(mock_key_state_listener, power_key_down());
     key_handler.handle(power_key_down_event);
@@ -219,7 +219,7 @@ TEST_F(TestPowerKeyHandler, forwards_down_events_to_key_state_listener)
 
 TEST_F(TestPowerKeyHandler, forwards_up_events_to_key_state_listener)
 {
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     EXPECT_CALL(mock_key_state_listener, power_key_up());
     key_handler.handle(power_key_down_event);
@@ -229,7 +229,7 @@ TEST_F(TestPowerKeyHandler, forwards_up_events_to_key_state_listener)
 TEST_F(TestPowerKeyHandler, down_short_up_up_comes_in_sequence)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -243,7 +243,7 @@ TEST_F(TestPowerKeyHandler, down_short_up_up_comes_in_sequence)
 TEST_F(TestPowerKeyHandler, down_long_up_comes_in_sequence)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -259,7 +259,7 @@ TEST_F(TestPowerKeyHandler, down_long_up_comes_in_sequence)
 TEST_F(TestPowerKeyHandler, down_very_long_up_comes_in_sequence)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -277,7 +277,7 @@ TEST_F(TestPowerKeyHandler, down_very_long_up_comes_in_sequence)
 TEST_F(TestPowerKeyHandler, spurious_alarm_callbacks_dont_cause_calls)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -299,7 +299,7 @@ TEST_F(TestPowerKeyHandler, spurious_alarm_callbacks_dont_cause_calls)
 TEST_F(TestPowerKeyHandler, spurious_alarm_callbacks_dont_cause_calls_after_first_timeout)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -322,7 +322,7 @@ TEST_F(TestPowerKeyHandler, spurious_alarm_callbacks_dont_cause_calls_after_firs
 TEST_F(TestPowerKeyHandler, multiple_sequences_work)
 {
     using namespace ::testing;
-    PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
+    usc::PowerKeyHandler key_handler(mock_timer, short_delay, long_delay, {&mock_key_state_listener});
 
     Sequence s;
 
@@ -356,11 +356,11 @@ TEST_F(TestPowerKeyHandler, throws_on_zero_timeouts)
 {
     using namespace ::testing;
     EXPECT_THROW({
-                 PowerKeyHandler key_handler(mock_timer, zero_timeout, long_delay, {&mock_key_state_listener});
+                 usc::PowerKeyHandler key_handler(mock_timer, zero_timeout, long_delay, {&mock_key_state_listener});
         }, std::invalid_argument
         );
     EXPECT_THROW({
-                 PowerKeyHandler key_handler(mock_timer, short_delay, zero_timeout, {&mock_key_state_listener});
+                 usc::PowerKeyHandler key_handler(mock_timer, short_delay, zero_timeout, {&mock_key_state_listener});
         }, std::invalid_argument
         );
 }

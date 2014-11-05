@@ -26,6 +26,7 @@
 #include "powerkey_handler.h"
 #include "powerkey_mediator.h"
 #include "voicecall_observer.h"
+#include "dbus_screen.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -159,19 +160,22 @@ void usc::SystemCompositor::qt_main()
         std::chrono::milliseconds power_key_ignore_timeout{config->power_key_ignore_timeout()};
         std::chrono::milliseconds shutdown_timeout{config->shutdown_timeout()};
 
+        dbus_screen = std::unique_ptr<DBusScreen>(new DBusScreen);
         screen_state_handler = std::make_shared<ScreenStateHandler>(config,
             std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_off_timeout),
-            std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_dim_timeout));
+            std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_dim_timeout),
+            *dbus_screen
+            );
+
+        dbus_screen->set_dbus_observer(screen_state_handler.get());
 
         power_key_mediator = std::make_shared<PowerKeyMediator>(*screen_state_handler, *screen_state_handler, system_impl);
 
         power_key_handler = std::make_shared<PowerKeyHandler>(*(config->the_main_loop()),
             power_key_ignore_timeout,
             shutdown_timeout,
-            std::initializer_list<PowerKeyStateListener*>{&*power_key_mediator, &key_state_signaler}
+            std::initializer_list<PowerKeyStateListener*>{power_key_mediator.get(), dbus_screen.get()}
             );
-
-        voice_call_observer = std::unique_ptr<VoiceCallObserver>(new VoiceCallObserver(*power_key_mediator));
 
         auto composite_filter = config->the_composite_event_filter();
         composite_filter->append(screen_state_handler);

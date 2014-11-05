@@ -53,11 +53,11 @@ enum DBusHandlerTaskId
 }
 
 
-DBusScreen::DBusScreen(DBusScreenObserver& observer, QObject *parent)
+DBusScreen::DBusScreen(QObject *parent)
     : QObject(parent),
       dbus_adaptor{new DBusScreenAdaptor(this)},
       service_watcher{new QDBusServiceWatcher()},
-      observer{&observer},
+      observer{nullptr},
       worker_thread{new usc::WorkerThread("USC/DBusHandler")}
 {
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -77,6 +77,33 @@ DBusScreen::DBusScreen(DBusScreenObserver& observer, QObject *parent)
 }
 
 DBusScreen::~DBusScreen() = default;
+
+void DBusScreen::set_dbus_observer(DBusScreenObserver *obs)
+{
+    observer = obs;
+}
+
+void DBusScreen::power_key_up()
+{
+    emit powerKeyUp();
+}
+
+void DBusScreen::power_key_short()
+{
+}
+
+void DBusScreen::power_key_long()
+{
+}
+
+void DBusScreen::power_key_very_long()
+{
+}
+
+void DBusScreen::power_key_down()
+{
+    emit powerKeyDown();
+}
 
 bool DBusScreen::setScreenPowerMode(const QString &mode, int reason)
 {
@@ -107,21 +134,11 @@ bool DBusScreen::setScreenPowerMode(const QString &mode, int reason)
     return true;
 }
 
-void DBusScreen::emit_power_state_change(MirPowerMode power_mode, PowerStateChangeReason reason)
+void DBusScreen::power_state_change(MirPowerMode power_mode, PowerStateChangeReason reason)
 {
-    QDBusMessage message =  QDBusMessage::createSignal("/com/canonical/Unity/Screen",
-        "com.canonical.Unity.Screen", "DisplayPowerStateChange");
-
-    int power_state = (power_mode == MirPowerMode::mir_power_mode_off) ? 0 : 1;
-
-    QVariant state(power_state);
-    QList<QVariant> arguments;
-    arguments.append(state);
-    arguments.append(static_cast<int>(reason));
-    message.setArguments(arguments);
-
-    QDBusConnection bus = QDBusConnection::systemBus();
-    bus.send(message);
+    emit DisplayPowerStateChange(
+        (power_mode == MirPowerMode::mir_power_mode_off) ? 0 : 1,
+        static_cast<int>(reason));
 }
 
 int DBusScreen::keepDisplayOn()

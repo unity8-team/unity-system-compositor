@@ -39,12 +39,15 @@ class Timer;
 }
 }
 
+namespace usc { class ScreenPowerStateListener;}
+
 class ScreenStateHandler: public mir::input::EventFilter, public DBusScreenObserver, public InactivtyTracker
 {
 public:
     ScreenStateHandler(std::shared_ptr<mir::DefaultServerConfiguration> const& config,
                        std::chrono::milliseconds power_off_timeout,
-                       std::chrono::milliseconds dimmer_timeout);
+                       std::chrono::milliseconds dimmer_timeout,
+                       usc::ScreenPowerStateListener& screen_state_listener);
     virtual ~ScreenStateHandler();
 
     //from EventFilter
@@ -87,7 +90,7 @@ private:
     std::unique_ptr<mir::time::Alarm> power_off_alarm;
     std::unique_ptr<mir::time::Alarm> dimmer_alarm;
 
-    std::unique_ptr<DBusScreen> dbus_screen;
+    usc::ScreenPowerStateListener& screen_state_listener;
 };
 
 #endif

@@ -35,6 +35,8 @@ class Timer;
 }
 }
 
+namespace usc
+{
 class PowerKeyStateListener;
 
 class PowerKeyHandler : public mir::input::EventFilter
@@ -75,5 +77,6 @@ private:
     std::unique_ptr<mir::time::Alarm> long_press_alarm;
     std::vector<PowerKeyStateListener*> const key_state_listener;
 };
+}
 
 #endif

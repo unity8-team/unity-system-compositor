@@ -17,14 +17,24 @@
 #ifndef POWER_KEY_STATE_LISTENER_
 #define POWER_KEY_STATE_LISTENER_
 
+namespace usc
+{
+
 class PowerKeyStateListener
 {
 public:
+    PowerKeyStateListener() = default;
+    virtual ~PowerKeyStateListener() = default;
     virtual void power_key_down() = 0;
     virtual void power_key_short() = 0;
     virtual void power_key_long() = 0;
     virtual void power_key_very_long() = 0;
     virtual void power_key_up() = 0;
+protected:
+    PowerKeyStateListener(PowerKeyStateListener const&) = delete;
+    PowerKeyStateListener& operator=(PowerKeyStateListener const&) = delete;
 };
+
+}
 
 #endif

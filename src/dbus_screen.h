@@ -17,7 +17,9 @@
 #ifndef DBUS_SCREEN_H_
 #define DBUS_SCREEN_H_
 
-#include <mir_toolkit/common.h>
+#include "screen_state.h"
+#include "screen_power_state_listener.h"
+#include "powerkey_state_listener.h"
 
 #include <memory>
 #include <mutex>
@@ -34,18 +36,23 @@ class DBusScreenAdaptor;
 class DBusScreenObserver;
 class QDBusInterface;
 class QDBusServiceWatcher;
-enum class PowerStateChangeReason;
 
-class DBusScreen : public QObject, protected QDBusContext
+class DBusScreen : public QObject, protected QDBusContext, public usc::PowerKeyStateListener, public usc::ScreenPowerStateListener
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "com.canonical.Unity.Screen")
 
 public:
-    explicit DBusScreen(DBusScreenObserver& observer, QObject *parent = 0);
+    explicit DBusScreen(QObject *parent = 0);
     virtual ~DBusScreen();
 
-    void emit_power_state_change(MirPowerMode mode, PowerStateChangeReason reason);
+    void set_dbus_observer(DBusScreenObserver *);
+    void power_state_change(MirPowerMode mode, PowerStateChangeReason reason) override;
+    void power_key_down() override;
+    void power_key_short() override;
+    void power_key_long() override;
+    void power_key_very_long() override;
+    void power_key_up() override;
 
 public Q_SLOTS:
     bool setScreenPowerMode(const QString &mode, int reason);
@@ -57,8 +64,13 @@ public Q_SLOTS:
     void userAutobrightnessEnable(bool enable);
 
     void setInactivityTimeouts(int poweroff_timeout, int dimmer_timeout);
-    
+
     void setTouchVisualizationEnabled(bool enabled);
+
+Q_SIGNALS:
+    void powerKeyUp();
+    void powerKeyDown();
+    void DisplayPowerStateChange(int power_state, int reason);
 
 private Q_SLOTS:
     void remove_display_on_requestor(QString const& requestor);
@@ -70,7 +82,7 @@ private:
     std::unique_ptr<DBusScreenAdaptor> dbus_adaptor;
     std::unique_ptr<QDBusServiceWatcher> service_watcher;
     std::unordered_map<std::string, std::unordered_set<int>> display_requests;
-    DBusScreenObserver* const observer;
+    DBusScreenObserver* observer;
     std::unique_ptr<usc::WorkerThread> worker_thread;
 };
 

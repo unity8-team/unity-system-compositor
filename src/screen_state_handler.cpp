@@ -13,8 +13,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define QT_NO_KEYWORDS
 
 #include "screen_state_handler.h"
+#include "powerd_mediator.h"
+#include "power_state_change_reason.h"
+#include "screen_power_state_listener.h"
 
 #include <mir/main_loop.h>
 #include <mir/time/timer.h>
@@ -25,10 +29,6 @@
 #include <mir/input/touch_visualizer.h>
 
 #include <cstdio>
-#include "dbus_screen.h"
-#include "dbus_screen_observer.h"
-#include "powerd_mediator.h"
-#include "power_state_change_reason.h"
 
 namespace mi = mir::input;
 namespace mc = mir::compositor;
@@ -36,7 +36,8 @@ namespace mg = mir::graphics;
 
 ScreenStateHandler::ScreenStateHandler(std::shared_ptr<mir::DefaultServerConfiguration> const& config,
                                        std::chrono::milliseconds poweroff_timeout,
-                                       std::chrono::milliseconds dimmer_timeout)
+                                       std::chrono::milliseconds dimmer_timeout,
+                                       usc::ScreenPowerStateListener & screen_state_listener)
     : current_power_mode{MirPowerMode::mir_power_mode_on},
       restart_timers{true},
       power_off_timeout{poweroff_timeout},
@@ -47,7 +48,7 @@ ScreenStateHandler::ScreenStateHandler(std::shared_ptr<mir::DefaultServerConfigu
               std::bind(&ScreenStateHandler::power_off_alarm_notification, this))},
       dimmer_alarm{config->the_main_loop()->create_alarm(
               std::bind(&ScreenStateHandler::dimmer_alarm_notification, this))},
-      dbus_screen{new DBusScreen(*this)}
+      screen_state_listener{screen_state_listener}
 {
     reset_timers_l();
 }
@@ -181,7 +182,7 @@ void ScreenStateHandler::configure_display_l(MirPowerMode mode, PowerStateChange
 
     current_power_mode = mode;
 
-    dbus_screen->emit_power_state_change(mode, reason);
+    screen_state_listener.power_state_change(mode, reason);
 
     if (!power_on)
         powerd_mediator->allow_suspend();

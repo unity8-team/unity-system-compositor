@@ -35,10 +35,10 @@ inline std::ostream & log()
 }
 }
 
-PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
+usc::PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
                                  std::chrono::milliseconds power_key_ignore_timeout,
                                  std::chrono::milliseconds shutdown_timeout,
-                                 std::initializer_list<PowerKeyStateListener*> listener)
+                                 std::initializer_list<usc::PowerKeyStateListener*> listener)
     : power_key{KeyState::Released},
       power_key_ignore_timeout{power_key_ignore_timeout},
       shutdown_timeout{shutdown_timeout},
@@ -53,9 +53,9 @@ PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
         throw std::invalid_argument("timeouts must be non-zero");
 }
 
-PowerKeyHandler::~PowerKeyHandler() = default;
+usc::PowerKeyHandler::~PowerKeyHandler() = default;
 
-bool PowerKeyHandler::handle(MirEvent const& event)
+bool usc::PowerKeyHandler::handle(MirEvent const& event)
 {
     if (event.type == mir_event_type_key &&
         event.key.key_code == POWER_KEY_CODE)
@@ -68,7 +68,7 @@ bool PowerKeyHandler::handle(MirEvent const& event)
     return false;
 }
 
-void PowerKeyHandler::power_key_down()
+void usc::PowerKeyHandler::power_key_down()
 {
     log() << __FUNCTION__ << std::endl;
     if (try_transistion(KeyState::Released, KeyState::Pressed))
@@ -76,11 +76,11 @@ void PowerKeyHandler::power_key_down()
         log() << __FUNCTION__ << " rescheduling timers in " << power_key_ignore_timeout.count() << ", "<< shutdown_timeout.count() << std::endl;
         long_press_alarm->reschedule_in(power_key_ignore_timeout);
         shutdown_alarm->reschedule_in(shutdown_timeout);
-        std::for_each(begin(key_state_listener), end(key_state_listener), [](PowerKeyStateListener* item){item->power_key_down();});
+        std::for_each(begin(key_state_listener), end(key_state_listener), [](usc::PowerKeyStateListener* item){item->power_key_down();});
     }
 }
 
-void PowerKeyHandler::power_key_up()
+void usc::PowerKeyHandler::power_key_up()
 {
     log() << __FUNCTION__ << std::endl;
     if (try_transistion(KeyState::Pressed, KeyState::Released))
@@ -88,7 +88,7 @@ void PowerKeyHandler::power_key_up()
         log() << __FUNCTION__ << " cancel timeouts" << std::endl;
         shutdown_alarm->cancel();
         long_press_alarm->cancel();
-        std::for_each(begin(key_state_listener), end(key_state_listener), [](PowerKeyStateListener* item){item->power_key_short();});
+        std::for_each(begin(key_state_listener), end(key_state_listener), [](usc::PowerKeyStateListener* item){item->power_key_short();});
     }
     else if (try_transistion(KeyState::LongPressed, KeyState::Released))
     {
@@ -100,30 +100,30 @@ void PowerKeyHandler::power_key_up()
         log() << __FUNCTION__ << " after very long" << std::endl;
         // both alarms already fired
     }
-    std::for_each(begin(key_state_listener), end(key_state_listener), [](PowerKeyStateListener* item){item->power_key_up();});
+    std::for_each(begin(key_state_listener), end(key_state_listener), [](usc::PowerKeyStateListener* item){item->power_key_up();});
 }
 
-void PowerKeyHandler::shutdown_alarm_notification()
+void usc::PowerKeyHandler::shutdown_alarm_notification()
 {
     log() << __FUNCTION__ << std::endl;
     if (try_transistion(KeyState::LongPressed, KeyState::VeryLongPressed))
     {
         log() << __FUNCTION__ << " just inform listener" << std::endl;
-        std::for_each(begin(key_state_listener), end(key_state_listener), [](PowerKeyStateListener* item){item->power_key_very_long();});
+        std::for_each(begin(key_state_listener), end(key_state_listener), [](usc::PowerKeyStateListener* item){item->power_key_very_long();});
     }
 }
 
-void PowerKeyHandler::long_press_notification()
+void usc::PowerKeyHandler::long_press_notification()
 {
     log() << __FUNCTION__ << std::endl;
     if (try_transistion(KeyState::Pressed, KeyState::LongPressed))
     {
         log() << __FUNCTION__ << " just inform listener" << std::endl;
-        std::for_each(begin(key_state_listener), end(key_state_listener), [](PowerKeyStateListener* item){item->power_key_long();});
+        std::for_each(begin(key_state_listener), end(key_state_listener), [](usc::PowerKeyStateListener* item){item->power_key_long();});
     }
 }
 
-bool PowerKeyHandler::try_transistion(KeyState from, KeyState to)
+bool usc::PowerKeyHandler::try_transistion(KeyState from, KeyState to)
 {
     return std::atomic_compare_exchange_strong(&power_key, &from, to);
 }

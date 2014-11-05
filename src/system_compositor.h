@@ -23,17 +23,16 @@
 #include <memory>
 
 #include "system_impl.h"
-#include "powerkey_state_signaler.h"
 
 class ScreenStateHandler;
-class PowerKeyHandler;
+class DBusScreen;
 
 namespace usc
 {
 
 class ServerConfiguration;
 class PowerKeyMediator;
-class VoiceCallObserver;
+class PowerKeyHandler;
 class DMConnection;
 class Spinner;
 
@@ -51,12 +50,11 @@ private:
     std::shared_ptr<ServerConfiguration> const config;
     std::shared_ptr<DMConnection> const dm_connection;
     std::shared_ptr<Spinner> const spinner;
+    std::unique_ptr<DBusScreen> dbus_screen;
     std::shared_ptr<ScreenStateHandler> screen_state_handler;
     std::shared_ptr<PowerKeyMediator> power_key_mediator;
     std::shared_ptr<PowerKeyHandler> power_key_handler;
-    std::unique_ptr<VoiceCallObserver> voice_call_observer;
     SystemImpl system_impl;
-    PowerKeyStateSignaler key_state_signaler;
 };
 
 }
