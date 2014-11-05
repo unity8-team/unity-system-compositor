@@ -16,40 +16,20 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef POWER_KEY_MEDIATOR_
-#define POWER_KEY_MEDIATOR_
+#ifndef USC_POWER_KEY_STATE_SIGNALER_H_
+#define USC_POWER_KEY_STATE_SIGNALER_H_
 
 #include "powerkey_state_listener.h"
-#include "call_state_listener.h"
 
-#include <atomic>
-
-class InactivtyTracker;
-class DBusScreenObserver;
-class System;
-
-namespace usc
-{
-
-class PowerKeyMediator : public PowerKeyStateListener, public CallStateListener
+class PowerKeyStateSignaler : public PowerKeyStateListener
 {
 public:
-    PowerKeyMediator(DBusScreenObserver& observer, InactivtyTracker& handler, System& sys);
     void power_key_down() override;
     void power_key_short() override;
     void power_key_long() override;
     void power_key_very_long() override;
     void power_key_up() override;
-
-    void call_active() override;
-    void no_call_active() override;
-private:
-    DBusScreenObserver& screen_observer;
-    InactivtyTracker& inactivity_tracker;
-    System& sys;
-    std::atomic<bool> active_call{false};
 };
 
-}
-
 #endif
+

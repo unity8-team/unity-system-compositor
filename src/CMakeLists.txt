@@ -21,6 +21,7 @@ set(USC_SRCS
   powerd_mediator.cpp
   powerkey_handler.cpp
   powerkey_mediator.cpp
+  powerkey_state_signaler.cpp
   screen_state_handler.cpp
   server_configuration.cpp
   session_coordinator.cpp
@@ -28,6 +29,7 @@ set(USC_SRCS
   surface_coordinator.cpp
   system_compositor.cpp
   system_impl.cpp
+  voicecall_observer.cpp
   worker_thread.cpp
 )
 

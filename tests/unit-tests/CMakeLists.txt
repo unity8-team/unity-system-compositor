@@ -23,8 +23,8 @@ add_executable(
   usc_unit_tests
 
   test_session_switcher.cpp
-  test_power_key_handler.cpp
-  test_power_key_mediator.cpp
+  test_powerkey_handler.cpp
+  test_powerkey_mediator.cpp
 )
 
 target_link_libraries(

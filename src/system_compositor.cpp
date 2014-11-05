@@ -25,6 +25,7 @@
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
 #include "powerkey_mediator.h"
+#include "voicecall_observer.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -93,6 +94,8 @@ usc::SystemCompositor::SystemCompositor(
       spinner{config->the_spinner()}
 {
 }
+
+usc::SystemCompositor::~SystemCompositor() = default;
 
 void usc::SystemCompositor::run()
 {
@@ -165,8 +168,10 @@ void usc::SystemCompositor::qt_main()
         power_key_handler = std::make_shared<PowerKeyHandler>(*(config->the_main_loop()),
             power_key_ignore_timeout,
             shutdown_timeout,
-            *power_key_mediator
+            std::initializer_list<PowerKeyStateListener*>{&*power_key_mediator, &key_state_signaler}
             );
+
+        voice_call_observer = std::unique_ptr<VoiceCallObserver>(new VoiceCallObserver(*power_key_mediator));
 
         auto composite_filter = config->the_composite_event_filter();
         composite_filter->append(screen_state_handler);

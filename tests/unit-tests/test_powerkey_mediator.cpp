@@ -18,9 +18,10 @@
 
 #include "src/powerkey_mediator.h"
 #include "src/inactivty_tracker.h"
-#include "src/dbus_screen_observer.h"
 #include "src/power_state_change_reason.h"
 #include "src/system.h"
+
+#include "mock_dbus_screen_observer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,25 +38,13 @@ public:
     MOCK_METHOD0(shutdown,void());
 };
 
-class MockDBusScreenObserver : public DBusScreenObserver
-{
-public:
-    MOCK_METHOD2(set_screen_power_mode, void(MirPowerMode, PowerStateChangeReason));
-    MOCK_METHOD1(toggle_screen_power_mode, void(PowerStateChangeReason));
-    MOCK_METHOD1(keep_display_on, void(bool));
-    MOCK_METHOD1(set_brightness, void(int));
-    MOCK_METHOD1(enable_auto_brightness, void(bool));
-    MOCK_METHOD2(set_inactivity_timeouts, void(int, int));
-    MOCK_METHOD1(set_touch_visualization_enabled, void(bool));
-};
-
 class PowerKeyMediatorTest : public ::testing::Test
 {
 public:
     ::testing::NiceMock<MockInactivityTracker> mock_tracker;
     ::testing::NiceMock<MockDBusScreenObserver> mock_screen_observer;
     ::testing::NiceMock<MockSystem> mock_system;
-    PowerKeyMediator key_mediator{mock_screen_observer, mock_tracker, mock_system};
+    usc::PowerKeyMediator key_mediator{mock_screen_observer, mock_tracker, mock_system};
 };
 
 TEST_F(PowerKeyMediatorTest, power_key_down_disables_inactivity_timers)
@@ -102,5 +91,48 @@ TEST_F(PowerKeyMediatorTest, power_key_very_long_sequence_forces_power_off_scree
 
     key_mediator.power_key_down();
     key_mediator.power_key_very_long();
+    key_mediator.power_key_up();
+}
+
+TEST_F(PowerKeyMediatorTest, screen_toggle_deactivated_during_call)
+{
+    EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
+        .Times(0);
+
+    key_mediator.call_active();
+
+    key_mediator.power_key_down();
+    key_mediator.power_key_short();
+    key_mediator.power_key_up();
+}
+
+TEST_F(PowerKeyMediatorTest, screen_toggle_deactivated_during_call_occurs_while_pressed)
+{
+    EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
+        .Times(0);
+
+    key_mediator.power_key_down();
+
+    key_mediator.call_active();
+
+    key_mediator.power_key_short();
+    key_mediator.power_key_up();
+}
+
+TEST_F(PowerKeyMediatorTest, screen_toggle_reactivated_when_call_is_gone)
+{
+    EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
+        .Times(1);
+
+    key_mediator.call_active();
+
+    key_mediator.power_key_down();
+    key_mediator.power_key_short();
+    key_mediator.power_key_up();
+
+    key_mediator.no_call_active();
+
+    key_mediator.power_key_down();
+    key_mediator.power_key_short();
     key_mediator.power_key_up();
 }

@@ -22,7 +22,9 @@
 #include <mutex>
 #include <memory>
 #include <atomic>
+#include <vector>
 #include <chrono>
+#include <initializer_list>
 
 namespace mir
 {
@@ -41,7 +43,7 @@ public:
     PowerKeyHandler(mir::time::Timer& timer,
                     std::chrono::milliseconds power_key_ignore_timeout,
                     std::chrono::milliseconds shutdown_timeout,
-                    PowerKeyStateListener& listener);
+                    std::initializer_list<PowerKeyStateListener*> listener);
 
     ~PowerKeyHandler();
 
@@ -71,7 +73,7 @@ private:
 
     std::unique_ptr<mir::time::Alarm> shutdown_alarm;
     std::unique_ptr<mir::time::Alarm> long_press_alarm;
-    PowerKeyStateListener* key_state_listener;
+    std::vector<PowerKeyStateListener*> const key_state_listener;
 };
 
 #endif

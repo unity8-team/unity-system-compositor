@@ -21,16 +21,19 @@
 #define USC_SYSTEM_COMPOSITOR_H_
 
 #include <memory>
+
 #include "system_impl.h"
+#include "powerkey_state_signaler.h"
 
 class ScreenStateHandler;
-class PowerKeyMediator;
 class PowerKeyHandler;
 
 namespace usc
 {
 
 class ServerConfiguration;
+class PowerKeyMediator;
+class VoiceCallObserver;
 class DMConnection;
 class Spinner;
 
@@ -38,6 +41,7 @@ class SystemCompositor
 {
 public:
     SystemCompositor(std::shared_ptr<ServerConfiguration> const& config);
+    ~SystemCompositor();
     void run();
 
 private:
@@ -50,7 +54,9 @@ private:
     std::shared_ptr<ScreenStateHandler> screen_state_handler;
     std::shared_ptr<PowerKeyMediator> power_key_mediator;
     std::shared_ptr<PowerKeyHandler> power_key_handler;
+    std::unique_ptr<VoiceCallObserver> voice_call_observer;
     SystemImpl system_impl;
+    PowerKeyStateSignaler key_state_signaler;
 };
 
 }

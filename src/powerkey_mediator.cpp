@@ -22,34 +22,47 @@
 #include "inactivty_tracker.h"
 #include "system.h"
 
-PowerKeyMediator::PowerKeyMediator(DBusScreenObserver & observer, InactivtyTracker & tracker, System& sys)
+usc::PowerKeyMediator::PowerKeyMediator(DBusScreenObserver & observer, InactivtyTracker & tracker, System& sys)
     : screen_observer{observer}, inactivity_tracker(tracker), sys(sys)
 {
 }
 
-void PowerKeyMediator::power_key_down()
+void usc::PowerKeyMediator::power_key_down()
 {
     inactivity_tracker.enable_inactivity_timers(false);
 }
 
-void PowerKeyMediator::power_key_short()
+void usc::PowerKeyMediator::power_key_short()
 {
-    screen_observer.toggle_screen_power_mode(PowerStateChangeReason::power_key);
+    if (!active_call)
+        screen_observer.toggle_screen_power_mode(PowerStateChangeReason::power_key);
 }
 
-void PowerKeyMediator::power_key_long()
+void usc::PowerKeyMediator::power_key_long()
 {
+    // screen is turned on so that the shutdown/restart/cancel dialog that is displayed
+    // by the shell can be seen
     screen_observer.set_screen_power_mode(
         MirPowerMode::mir_power_mode_on, PowerStateChangeReason::power_key);
 }
 
-void PowerKeyMediator::power_key_very_long()
+void usc::PowerKeyMediator::power_key_very_long()
 {
     screen_observer.set_screen_power_mode(
         MirPowerMode::mir_power_mode_off, PowerStateChangeReason::power_key);
     sys.shutdown();
 }
 
-void PowerKeyMediator::power_key_up()
+void usc::PowerKeyMediator::power_key_up()
 {
+}
+
+void usc::PowerKeyMediator::call_active()
+{
+    active_call = true;
+}
+
+void usc::PowerKeyMediator::no_call_active()
+{
+    active_call = false;
 }
