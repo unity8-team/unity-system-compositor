@@ -98,9 +98,9 @@ void usc::VoiceCallObserver::subscribe_to_call_manager(QString const& modem)
 {
     log() << __FUNCTION__ << modem.toStdString() << std::endl;
     QDBusConnection::systemBus().connect("org.ofono", modem, "org.ofono.VoiceCallManager",
-                                         "CallAdded", this, SLOT(call_added(QDBusObjectPath const&, QVariantMap const&)));
+                                         "CallAdded", this, SLOT(call_added()));
     QDBusConnection::systemBus().connect("org.ofono", modem, "org.ofono.VoiceCallManager",
-                                         "CallRemoved", this, SLOT(call_removed(QDBusObjectPath const&, QVariantMap const&)));
+                                         "CallRemoved", this, SLOT(call_removed()));
 
 }
 
@@ -111,7 +111,7 @@ void usc::VoiceCallObserver::modem_added(QDBusObjectPath const& path, QVariantMa
 }
 
 
-void usc::VoiceCallObserver::call_added(QDBusObjectPath const&, QVariantMap const& )
+void usc::VoiceCallObserver::call_added()
 {
     log() << __FUNCTION__ << std::endl;
     if (++active_calls == 1)
@@ -120,7 +120,7 @@ void usc::VoiceCallObserver::call_added(QDBusObjectPath const&, QVariantMap cons
     }
 }
 
-void usc::VoiceCallObserver::call_removed(QDBusObjectPath const&, QVariantMap const&)
+void usc::VoiceCallObserver::call_removed()
 {
     log() << __FUNCTION__ << std::endl;
     if (--active_calls == 0)

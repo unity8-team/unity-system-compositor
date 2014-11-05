@@ -35,8 +35,8 @@ public:
     VoiceCallObserver(CallStateListener& listener);
 
 private Q_SLOTS:
-    void call_added(QDBusObjectPath const&, QVariantMap const&);
-    void call_removed(QDBusObjectPath const&, QVariantMap const&);
+    void call_added();
+    void call_removed();
     void modem_added(QDBusObjectPath const&, QVariantMap const&);
 
 private:
