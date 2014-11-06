@@ -20,7 +20,7 @@
 #define POWER_KEY_MEDIATOR_
 
 #include "powerkey_state_listener.h"
-#include "call_state_listener.h"
+#include "screen_toggle_controller.h"
 
 #include <atomic>
 
@@ -31,7 +31,7 @@ class System;
 namespace usc
 {
 
-class PowerKeyMediator : public PowerKeyStateListener, public CallStateListener
+class PowerKeyMediator : public PowerKeyStateListener, public ScreenToggleController
 {
 public:
     PowerKeyMediator(DBusScreenObserver& observer, InactivtyTracker& handler, System& sys);
@@ -41,13 +41,13 @@ public:
     void power_key_very_long() override;
     void power_key_up() override;
 
-    void call_active() override;
-    void no_call_active() override;
+    void enable_screen_toggle() override;
+    void disable_screen_toggle() override;
 private:
     DBusScreenObserver& screen_observer;
     InactivtyTracker& inactivity_tracker;
     System& sys;
-    std::atomic<bool> active_call{false};
+    std::atomic<bool> screen_toggle_enabled{true};
 };
 
 }

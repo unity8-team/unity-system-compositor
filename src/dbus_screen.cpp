@@ -18,6 +18,7 @@
 #include "dbus_screen_adaptor.h"
 #include "dbus_screen_observer.h"
 #include "power_state_change_reason.h"
+#include "screen_toggle_controller.h"
 #include "worker_thread.h"
 
 #include <atomic>
@@ -81,6 +82,11 @@ DBusScreen::~DBusScreen() = default;
 void DBusScreen::set_dbus_observer(DBusScreenObserver *obs)
 {
     observer = obs;
+}
+
+void DBusScreen::set_screen_toggle_controller(usc::ScreenToggleController *ctrl)
+{
+    controller = ctrl;
 }
 
 void DBusScreen::power_key_up()
@@ -190,6 +196,20 @@ void DBusScreen::removeDisplayOnRequest(int cookie)
     caller_requests.erase(cookie);
     if (caller_requests.size() == 0)
         remove_requestor(requestor, lock);
+}
+
+void DBusScreen::enablePowerModeToggle()
+{
+    if (!controller)
+        return;
+    controller->enable_screen_toggle();
+}
+
+void DBusScreen::disablePowerModeToggle()
+{
+    if (!controller)
+        return;
+    controller->disable_screen_toggle();
 }
 
 void DBusScreen::remove_display_on_requestor(QString const& requestor)

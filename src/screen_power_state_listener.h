@@ -17,6 +17,10 @@
 #ifndef USC_SCREEN_POWER_STATE_LISTENER_H_
 #define USC_SCREEN_POWER_STATE_LISTENER_H_
 
+#include <mir_toolkit/common.h>
+
+enum class PowerStateChangeReason;
+
 namespace usc
 {
 

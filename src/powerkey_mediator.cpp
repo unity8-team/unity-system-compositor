@@ -34,7 +34,7 @@ void usc::PowerKeyMediator::power_key_down()
 
 void usc::PowerKeyMediator::power_key_short()
 {
-    if (!active_call)
+    if (screen_toggle_enabled)
         screen_observer.toggle_screen_power_mode(PowerStateChangeReason::power_key);
 }
 
@@ -57,12 +57,12 @@ void usc::PowerKeyMediator::power_key_up()
 {
 }
 
-void usc::PowerKeyMediator::call_active()
+void usc::PowerKeyMediator::enable_screen_toggle()
 {
-    active_call = true;
+    screen_toggle_enabled = true;
 }
 
-void usc::PowerKeyMediator::no_call_active()
+void usc::PowerKeyMediator::disable_screen_toggle()
 {
-    active_call = false;
+    screen_toggle_enabled = false;
 }

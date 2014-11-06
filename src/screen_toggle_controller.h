@@ -16,22 +16,22 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef USC_CALL_STATE_LISTENER_H_
-#define USC_CALL_STATE_LISTENER_H_
+#ifndef USC_SCREEN_TOGGLE_CONTROLLER_H_
+#define USC_SCREEN_TOGGLE_CONTROLLER_H_
 
 namespace usc
 {
 
-class CallStateListener
+class ScreenToggleController
 {
 public:
-    CallStateListener() = default;
-    virtual ~CallStateListener() = default;
-    virtual void call_active() = 0;
-    virtual void no_call_active() = 0;
+    ScreenToggleController() = default;
+    virtual ~ScreenToggleController() = default;
+    virtual void enable_screen_toggle() = 0;
+    virtual void disable_screen_toggle() = 0;
 protected:
-    CallStateListener(CallStateListener const&) = delete;
-    CallStateListener& operator=(CallStateListener const&) = delete;
+    ScreenToggleController(ScreenToggleController const&) = delete;
+    ScreenToggleController& operator=(ScreenToggleController const&) = delete;
 };
 }
 

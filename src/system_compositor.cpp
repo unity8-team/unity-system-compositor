@@ -25,7 +25,6 @@
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
 #include "powerkey_mediator.h"
-#include "voicecall_observer.h"
 #include "dbus_screen.h"
 
 // Qt headers will introduce a #define of "signals"
@@ -170,6 +169,8 @@ void usc::SystemCompositor::qt_main()
         dbus_screen->set_dbus_observer(screen_state_handler.get());
 
         power_key_mediator = std::make_shared<PowerKeyMediator>(*screen_state_handler, *screen_state_handler, system_impl);
+
+        dbus_screen->set_screen_toggle_controller(power_key_mediator.get());
 
         power_key_handler = std::make_shared<PowerKeyHandler>(*(config->the_main_loop()),
             power_key_ignore_timeout,

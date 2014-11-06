@@ -94,43 +94,43 @@ TEST_F(PowerKeyMediatorTest, power_key_very_long_sequence_forces_power_off_scree
     key_mediator.power_key_up();
 }
 
-TEST_F(PowerKeyMediatorTest, screen_toggle_deactivated_during_call)
+TEST_F(PowerKeyMediatorTest, screen_toggle_can_be_deactivated)
 {
     EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
         .Times(0);
 
-    key_mediator.call_active();
+    key_mediator.disable_screen_toggle();
 
     key_mediator.power_key_down();
     key_mediator.power_key_short();
     key_mediator.power_key_up();
 }
 
-TEST_F(PowerKeyMediatorTest, screen_toggle_deactivated_during_call_occurs_while_pressed)
+TEST_F(PowerKeyMediatorTest, screen_toggle_can_be_deactivated_during_key_down)
 {
     EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
         .Times(0);
 
     key_mediator.power_key_down();
 
-    key_mediator.call_active();
+    key_mediator.disable_screen_toggle();
 
     key_mediator.power_key_short();
     key_mediator.power_key_up();
 }
 
-TEST_F(PowerKeyMediatorTest, screen_toggle_reactivated_when_call_is_gone)
+TEST_F(PowerKeyMediatorTest, screen_toggle_can_be_reactivated)
 {
     EXPECT_CALL(mock_screen_observer, toggle_screen_power_mode(PowerStateChangeReason::power_key))
         .Times(1);
 
-    key_mediator.call_active();
+    key_mediator.disable_screen_toggle();
 
     key_mediator.power_key_down();
     key_mediator.power_key_short();
     key_mediator.power_key_up();
 
-    key_mediator.no_call_active();
+    key_mediator.enable_screen_toggle();
 
     key_mediator.power_key_down();
     key_mediator.power_key_short();

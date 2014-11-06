@@ -17,7 +17,6 @@
 #ifndef DBUS_SCREEN_H_
 #define DBUS_SCREEN_H_
 
-#include "screen_state.h"
 #include "screen_power_state_listener.h"
 #include "powerkey_state_listener.h"
 
@@ -30,7 +29,10 @@
 #include <QtCore>
 #include <QDBusContext>
 
-namespace usc {class WorkerThread;}
+namespace usc {
+class WorkerThread;
+class ScreenToggleController;
+}
 
 class DBusScreenAdaptor;
 class DBusScreenObserver;
@@ -46,7 +48,8 @@ public:
     explicit DBusScreen(QObject *parent = 0);
     virtual ~DBusScreen();
 
-    void set_dbus_observer(DBusScreenObserver *);
+    void set_dbus_observer(DBusScreenObserver *observer);
+    void set_screen_toggle_controller(usc::ScreenToggleController *controller);
     void power_state_change(MirPowerMode mode, PowerStateChangeReason reason) override;
     void power_key_down() override;
     void power_key_short() override;
@@ -58,6 +61,8 @@ public Q_SLOTS:
     bool setScreenPowerMode(const QString &mode, int reason);
     int keepDisplayOn();
     void removeDisplayOnRequest(int id);
+    void enablePowerModeToggle();
+    void disablePowerModeToggle();
 
     //TODO: Expose same DBus powerd interface for now
     void setUserBrightness(int brightness);
@@ -83,6 +88,7 @@ private:
     std::unique_ptr<QDBusServiceWatcher> service_watcher;
     std::unordered_map<std::string, std::unordered_set<int>> display_requests;
     DBusScreenObserver* observer;
+    usc::ScreenToggleController* controller;
     std::unique_ptr<usc::WorkerThread> worker_thread;
 };
 
