@@ -59,6 +59,7 @@ DBusScreen::DBusScreen(QObject *parent)
       dbus_adaptor{new DBusScreenAdaptor(this)},
       service_watcher{new QDBusServiceWatcher()},
       observer{nullptr},
+      controller{nullptr},
       worker_thread{new usc::WorkerThread("USC/DBusHandler")}
 {
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -200,6 +201,7 @@ void DBusScreen::removeDisplayOnRequest(int cookie)
 
 void DBusScreen::enablePowerModeToggle()
 {
+    std::cout << "enablePowerModeToggle" << std::endl;
     if (!controller)
         return;
     controller->enable_screen_toggle();
@@ -207,6 +209,7 @@ void DBusScreen::enablePowerModeToggle()
 
 void DBusScreen::disablePowerModeToggle()
 {
+    std::cout << "disablePowerModeToggle" << std::endl;
     if (!controller)
         return;
     controller->disable_screen_toggle();
