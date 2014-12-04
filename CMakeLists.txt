@@ -58,7 +58,6 @@ enable_testing()
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 if (MIR_ENABLE_TESTS)
-  find_package(Gtest REQUIRED)
-  include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+  find_package(GMock REQUIRED)
   add_subdirectory(tests/)
 endif ()

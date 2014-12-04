@@ -30,10 +30,7 @@ target_link_libraries(
 
    usc
    ${GTEST_BOTH_LIBRARIES}
-   ${GMOCK_LIBRARY}
-   ${GMOCK_MAIN_LIBRARY}
+   ${GMOCK_LIBRARIES}
 )
 
 add_test(usc_unit_tests ${EXECUTABLE_OUTPUT_PATH}/usc_unit_tests)
-
-add_dependencies(usc_unit_tests GMock)
