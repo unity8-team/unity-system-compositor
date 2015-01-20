@@ -26,7 +26,8 @@ VolumeKeyHandler::~VolumeKeyHandler() = default;
 
 bool VolumeKeyHandler::handle(MirEvent const& event)
 {
-    qDebug() << "JOSH: they key code is: " << event.key.key_code; 
+    static const int32_t VOLUME_DECREASE_KEY_CODE = 25;
+    static const int32_t VOLUME_INCREASE_KEY_CODE = 24
     return true;
 }
 

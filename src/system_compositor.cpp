@@ -24,6 +24,7 @@
 #include "spinner.h"
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
+#include "volumekey_handler.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -162,9 +163,12 @@ void usc::SystemCompositor::qt_main()
             shutdown_timeout,
             *screen_state_handler);
 
+        volume_key_handler = std::make_shared<VolumeKeyHandler>();
+
         auto composite_filter = server->the_composite_event_filter();
         composite_filter->append(screen_state_handler);
         composite_filter->append(power_key_handler);
+        composite_filter->append(volume_key_handler);
     }
 
     app.exec();
