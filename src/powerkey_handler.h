@@ -50,6 +50,8 @@ public:
 private:
     void power_key_up();
     void power_key_down();
+    void volume_decrease_key_down();
+    void volume_decrease_key_up();
     void shutdown_alarm_notification();
     void long_press_notification();
 

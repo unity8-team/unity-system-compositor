@@ -26,7 +26,6 @@ set(USC_SRCS
   session_switcher.cpp
   surface_coordinator.cpp
   system_compositor.cpp
-  volumekey_handler.cpp
   worker_thread.cpp
 )
 
