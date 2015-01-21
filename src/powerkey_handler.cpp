@@ -16,7 +16,6 @@
 
 #include "powerkey_handler.h"
 #include "screen_state_handler.h"
-#include "powerd_mediator.h"
 #include "power_state_change_reason.h"
 
 #include <mir/time/timer.h>
@@ -45,8 +44,7 @@ PowerKeyHandler::~PowerKeyHandler() = default;
 bool PowerKeyHandler::handle(MirEvent const& event)
 {
     static const int32_t POWER_KEY_CODE = 26;
-    static const int32_t VOLUME_DECREASE_KEY_CODE = 25;
-    // static const int32_t VOLUME_INCREASE_KEY_CODE = 24;
+    static const int32_t SCREENSHOT_BUTTON_KEY_CODE = 25; /* Volume Decrease */
 
     if (event.type == mir_event_type_key &&
         event.key.key_code == POWER_KEY_CODE)
@@ -58,12 +56,12 @@ bool PowerKeyHandler::handle(MirEvent const& event)
     }
 
     if (event.type == mir_event_type_key &&
-        event.key.key_code == VOLUME_DECREASE_KEY_CODE)
+        event.key.key_code == SCREENSHOT_BUTTON_KEY_CODE)
     {
         if (event.key.action == mir_key_action_down)
-            volume_decrease_key_down();
+            screenshot_key_down();
         else if (event.key.action == mir_key_action_up)
-            volume_decrease_key_down();
+            screenshot_key_down();
     }
 
     return false;
@@ -89,22 +87,16 @@ void PowerKeyHandler::power_key_up()
     }
 }
 
-void PowerKeyHandler::volume_decrease_key_down()
+void PowerKeyHandler::screenshot_key_down()
 {
-    qDebug() << "JOSH: volume key is down";
-    qDebug() << "JOSH: long press state: " << long_press_alarm->state();
-    if (long_press_alarm->state() == mir::time::Alarm::State::pending)
-    {
-        qDebug() << "JOSH: pending";
-    }
-    // Disable suspend and/or keep screen on
-
+    std::lock_guard<std::mutex> lock{guard};
+    screen_state_handler->keep_display_on(true);
 }
 
-void PowerKeyHandler::volume_decrease_key_up()
+void PowerKeyHandler::screenshot_key_up()
 {
-    // Re-enable suspend, or whatever we decided to do
-    return;
+    std::lock_guard<std::mutex> locl{guard};
+    screen_state_handler->keep_display_on(false);
 }
 
 void PowerKeyHandler::shutdown_alarm_notification()
