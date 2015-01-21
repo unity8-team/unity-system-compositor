@@ -91,14 +91,12 @@ void PowerKeyHandler::screenshot_key_down()
 {
     std::lock_guard<std::mutex> lock{guard};
     screenshot_button_pressed = true;
-    //screen_state_handler->keep_display_on(true);
 }
 
 void PowerKeyHandler::screenshot_key_up()
 {
     std::lock_guard<std::mutex> lock{guard};
     screenshot_button_pressed = false;
-    //screen_state_handler->keep_display_on(false);
 }
 
 void PowerKeyHandler::shutdown_alarm_notification()
