@@ -52,6 +52,7 @@ private:
     void power_key_down();
     void screenshot_key_down();
     void screenshot_key_up();
+    bool screenshot_button_pressed = false;
     void shutdown_alarm_notification();
     void long_press_notification();
 

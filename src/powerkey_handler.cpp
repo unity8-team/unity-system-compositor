@@ -47,21 +47,21 @@ bool PowerKeyHandler::handle(MirEvent const& event)
     static const int32_t SCREENSHOT_BUTTON_KEY_CODE = 25; /* Volume Decrease */
 
     if (event.type == mir_event_type_key &&
+        event.key.key_code == SCREENSHOT_BUTTON_KEY_CODE)
+    {
+        if (event.key.action == mir_key_action_down)
+            screenshot_key_down();
+        else if (event.key.action == mir_key_action_up)
+            screenshot_key_up();
+    }
+
+    if (event.type == mir_event_type_key &&
         event.key.key_code == POWER_KEY_CODE)
     {
         if (event.key.action == mir_key_action_down)
             power_key_down();
         else if (event.key.action == mir_key_action_up)
             power_key_up();
-    }
-
-    if (event.type == mir_event_type_key &&
-        event.key.key_code == SCREENSHOT_BUTTON_KEY_CODE)
-    {
-        if (event.key.action == mir_key_action_down)
-            screenshot_key_down();
-        else if (event.key.action == mir_key_action_up)
-            screenshot_key_down();
     }
 
     return false;
@@ -81,7 +81,7 @@ void PowerKeyHandler::power_key_up()
     std::lock_guard<std::mutex> lock{guard};
     shutdown_alarm->cancel();
     long_press_alarm->cancel();
-    if (!long_press_detected)
+    if (!long_press_detected && !screenshot_button_pressed)
     {
         screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
     }
@@ -90,13 +90,15 @@ void PowerKeyHandler::power_key_up()
 void PowerKeyHandler::screenshot_key_down()
 {
     std::lock_guard<std::mutex> lock{guard};
-    screen_state_handler->keep_display_on(true);
+    screenshot_button_pressed = true;
+    //screen_state_handler->keep_display_on(true);
 }
 
 void PowerKeyHandler::screenshot_key_up()
 {
-    std::lock_guard<std::mutex> locl{guard};
-    screen_state_handler->keep_display_on(false);
+    std::lock_guard<std::mutex> lock{guard};
+    screenshot_button_pressed = false;
+    //screen_state_handler->keep_display_on(false);
 }
 
 void PowerKeyHandler::shutdown_alarm_notification()
