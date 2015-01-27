@@ -52,12 +52,12 @@ private:
     void power_key_down();
     void screenshot_key_down();
     void screenshot_key_up();
-    bool screenshot_button_pressed = false;
     void shutdown_alarm_notification();
     void long_press_notification();
 
     std::mutex guard;
     std::atomic<bool> long_press_detected;
+    std::atomic<bool> screenshot_button_pressed;
 
     ScreenStateHandler* screen_state_handler;
 

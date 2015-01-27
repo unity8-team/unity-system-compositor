@@ -31,6 +31,7 @@ PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
                                  std::chrono::milliseconds shutdown_timeout,
                                  ScreenStateHandler& screen_state_handler)
     : long_press_detected{false},
+      screenshot_button_pressed{false},
       screen_state_handler{&screen_state_handler},
       power_key_ignore_timeout{power_key_ignore_timeout},
       shutdown_timeout{shutdown_timeout},
