@@ -31,6 +31,8 @@ PowerKeyHandler::PowerKeyHandler(mir::time::Timer& timer,
                                  std::chrono::milliseconds shutdown_timeout,
                                  ScreenStateHandler& screen_state_handler)
     : long_press_detected{false},
+      power_key_pressed{false},
+      power_key_been_released_since_screenshot{true},
       screenshot_button_pressed{false},
       screen_state_handler{&screen_state_handler},
       power_key_ignore_timeout{power_key_ignore_timeout},
@@ -71,6 +73,10 @@ bool PowerKeyHandler::handle(MirEvent const& event)
 void PowerKeyHandler::power_key_down()
 {
     std::lock_guard<std::mutex> lock{guard};
+    power_key_pressed = true;
+    if (screenshot_button_pressed) {
+        power_key_been_released_since_screenshot = false;
+    }
     screen_state_handler->enable_inactivity_timers(false);
     long_press_detected = false;
     long_press_alarm->reschedule_in(power_key_ignore_timeout);
@@ -80,17 +86,22 @@ void PowerKeyHandler::power_key_down()
 void PowerKeyHandler::power_key_up()
 {
     std::lock_guard<std::mutex> lock{guard};
+    power_key_pressed = false;
     shutdown_alarm->cancel();
     long_press_alarm->cancel();
-    if (!long_press_detected && !screenshot_button_pressed)
+    if (!long_press_detected && !screenshot_button_pressed && power_key_been_released_since_screenshot)
     {
         screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
     }
+    power_key_been_released_since_screenshot = true;
 }
 
 void PowerKeyHandler::screenshot_key_down()
 {
     std::lock_guard<std::mutex> lock{guard};
+    if (power_key_pressed) {
+        power_key_been_released_since_screenshot = false;
+    }
     screenshot_button_pressed = true;
 }
 

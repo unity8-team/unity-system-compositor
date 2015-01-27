@@ -57,6 +57,8 @@ private:
 
     std::mutex guard;
     std::atomic<bool> long_press_detected;
+    std::atomic<bool> power_key_pressed;
+    std::atomic<bool> power_key_been_released_since_screenshot;
     std::atomic<bool> screenshot_button_pressed;
 
     ScreenStateHandler* screen_state_handler;
