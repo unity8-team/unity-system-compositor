@@ -89,6 +89,7 @@ void PowerKeyHandler::power_key_up()
     power_key_pressed = false;
     shutdown_alarm->cancel();
     long_press_alarm->cancel();
+    screen_state_handler->enable_inactivity_timers(true);
     if (!long_press_detected && !screenshot_button_pressed && power_key_been_released_since_screenshot)
     {
         screen_state_handler->toggle_screen_power_mode(PowerStateChangeReason::power_key);
