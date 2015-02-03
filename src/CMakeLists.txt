@@ -16,6 +16,7 @@
 
 set(USC_SRCS
   asio_dm_connection.cpp
+  cursor_image_enabler.cpp
   dbus_screen.cpp
   external_spinner.cpp
   powerd_mediator.cpp

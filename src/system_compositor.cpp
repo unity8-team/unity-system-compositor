@@ -24,6 +24,7 @@
 #include "spinner.h"
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
+#include "cursor_image_enabler.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -152,6 +153,7 @@ void usc::SystemCompositor::qt_main()
         std::chrono::seconds inactivity_display_dim_timeout{server->inactivity_display_dim_timeout()};
         std::chrono::milliseconds power_key_ignore_timeout{server->power_key_ignore_timeout()};
         std::chrono::milliseconds shutdown_timeout{server->shutdown_timeout()};
+        std::chrono::milliseconds remove_pointer_timeout{server->remove_pointer_timeout()};
 
         screen_state_handler = std::make_shared<ScreenStateHandler>(server,
             std::chrono::duration_cast<std::chrono::milliseconds>(inactivity_display_off_timeout),
@@ -162,9 +164,16 @@ void usc::SystemCompositor::qt_main()
             shutdown_timeout,
             *screen_state_handler);
 
+        cursor_image_enabler = std::make_shared<CursorImageEnabler>(
+            server->the_cursor(),
+            server->the_default_cursor_image(),
+            remove_pointer_timeout);
+
         auto composite_filter = server->the_composite_event_filter();
         composite_filter->append(screen_state_handler);
         composite_filter->append(power_key_handler);
+        if (server->enable_hardware_cursor())
+            composite_filter->append(cursor_image_enabler);
     }
 
     app.exec();

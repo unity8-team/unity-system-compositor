@@ -24,6 +24,7 @@
 
 class ScreenStateHandler;
 class PowerKeyHandler;
+class CursorImageEnabler;
 
 namespace usc
 {
@@ -46,6 +47,7 @@ private:
     std::shared_ptr<Spinner> const spinner;
     std::shared_ptr<ScreenStateHandler> screen_state_handler;
     std::shared_ptr<PowerKeyHandler> power_key_handler;
+    std::shared_ptr<CursorImageEnabler> cursor_image_enabler;
 };
 
 }

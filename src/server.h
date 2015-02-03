@@ -42,6 +42,8 @@ public:
     using mir::Server::the_display;
     using mir::Server::the_compositor;
     using mir::Server::the_touch_visualizer;
+    using mir::Server::the_cursor;
+    using mir::Server::the_default_cursor_image;
 
     virtual std::shared_ptr<Spinner> the_spinner();
     virtual std::shared_ptr<DMMessageHandler> the_dm_message_handler();
@@ -70,6 +72,11 @@ public:
     int power_key_ignore_timeout()
     {
        return the_options()->get("power-key-ignore-timeout", 2000);
+    }
+
+    int remove_pointer_timeout()
+    {
+       return the_options()->get("remove-pointer-timeout", 0);
     }
 
     bool enable_hardware_cursor()

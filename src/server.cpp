@@ -109,18 +109,6 @@ usc::Server::Server(int argc, char** argv)
 
     set_command_line_handler(&ignore_unknown_arguments);
 
-    wrap_cursor_listener([this](std::shared_ptr<mir::input::CursorListener> const& default_)
-        -> std::shared_ptr<mir::input::CursorListener>
-        {
-            // This is a workaround for u8 desktop preview in 14.04 for the lack of client cursor API.
-            // We need to disable the cursor for XMir but leave it on for the desktop preview.
-            // Luckily as it stands they run inside seperate instances of USC. ~racarr
-            if (enable_hardware_cursor())
-                return default_;
-            else
-                return std::make_shared<NullCursorListener>();
-        });
-
     override_the_server_status_listener([this]()
         -> std::shared_ptr<mir::ServerStatusListener>
         {
