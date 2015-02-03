@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,6 +17,7 @@
 #include "cursor_image_enabler.h"
 
 #include "mir/graphics/cursor.h"
+#include "mir_toolkit/event.h"
 
 namespace mi = mir::input;
 
@@ -34,21 +35,20 @@ CursorImageEnabler::~CursorImageEnabler() = default;
 
 bool CursorImageEnabler::handle(MirEvent const& event)
 {
-    // TODO this needs update when MirEvent 2.0: pointer events land
-    if (event.type == mir_event_type_motion)
+    if (mir_event_get_type(&event) != mir_event_type_input)
     {
-        if (event.motion.pointer_count > 0 && (
-                event.motion.pointer_coordinates[0].tool_type == mir_motion_tool_type_mouse ||
-                event.motion.pointer_coordinates[0].tool_type == mir_motion_tool_type_stylus ))
-        {
-            enable_cursor();
-            last_cursor_movement = event.motion.event_time;
-        }
-        else if (remove_delay &&
-                (event.motion.event_time - last_cursor_movement > remove_delay))
-        {
-            disable_cursor();
-        }
+        return false;
+    }
+    auto const* ev = mir_event_get_input_event(&event);
+    if (mir_input_event_type_pointer == mir_input_event_get_type(ev))
+    {
+        enable_cursor();
+        last_cursor_movement = event.motion.event_time;
+    }
+    else if (remove_delay &&
+             (event.motion.event_time - last_cursor_movement > remove_delay))
+    {
+        disable_cursor();
     }
     return false;
 }

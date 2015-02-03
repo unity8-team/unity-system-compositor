@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POINTER_MOVE_HANDLER_H_
-#define POINTER_MOVE_HANDLER_H_
+#ifndef USC_CURSOR_IMAGE_ENABLER_H_
+#define USC_CURSOR_IMAGE_ENABLER_H_
 
 #include "mir/input/event_filter.h"
 
@@ -31,9 +31,10 @@ class CursorImage;
 }
 }
 
-
-class ScreenStateHandler;
-
+/*
+ * Disables the cursor on construction and waits for the first mir pointer/cursor
+ * event to come by for enabling the cursor again.
+ */
 class CursorImageEnabler : public mir::input::EventFilter
 {
 public:
