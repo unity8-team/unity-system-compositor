@@ -23,7 +23,7 @@ add_executable(
   usc_unit_tests
 
   test_session_switcher.cpp
-  test_cursor_image_enabler.cpp
+  test_cursor_enabler.cpp
 )
 
 target_link_libraries(

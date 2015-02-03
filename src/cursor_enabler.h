@@ -35,14 +35,13 @@ class CursorImage;
  * Disables the cursor on construction and waits for the first mir pointer/cursor
  * event to come by for enabling the cursor again.
  */
-class CursorImageEnabler : public mir::input::EventFilter
+class CursorEnabler : public mir::input::EventFilter
 {
 public:
-    CursorImageEnabler(std::shared_ptr<mir::graphics::Cursor> const& cursor,
-                       std::shared_ptr<mir::graphics::CursorImage> const& default_image,
+    CursorEnabler(std::shared_ptr<mir::graphics::Cursor> const& cursor,
                        std::chrono::milliseconds remove_pointer_timeout);
 
-    ~CursorImageEnabler();
+    ~CursorEnabler();
 
     bool handle(MirEvent const& event) override;
 
@@ -54,7 +53,6 @@ private:
     uint32_t remove_delay;
     uint32_t last_cursor_movement;
     std::shared_ptr<mir::graphics::Cursor> const cursor;
-    std::shared_ptr<mir::graphics::CursorImage> const default_image; // unpleasent
 };
 
 #endif

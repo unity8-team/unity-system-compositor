@@ -102,6 +102,7 @@ usc::Server::Server(int argc, char** argv)
     add_configuration_option("inactivity-display-dim-timeout", "The time in seconds before the screen is dimmed when there are no active sessions",  mir::OptionType::integer);
     add_configuration_option("shutdown-timeout", "The time in milli-seconds the power key must be held to initiate a clean system shutdown",  mir::OptionType::integer);
     add_configuration_option("power-key-ignore-timeout", "The time in milli-seconds the power key must be held to ignore - must be less than shutdown-timeout",  mir::OptionType::integer);
+    add_configuration_option("remove_pointer_timeout", "The time in milli-seconds the cursor image stays visible after touch screen is used again - by default the cursor image stays visible",  mir::OptionType::integer);
     add_configuration_option("disable-inactivity-policy", "Disables handling user inactivity and power key",  mir::OptionType::boolean);
 
     set_command_line(argc, const_cast<char const **>(argv));

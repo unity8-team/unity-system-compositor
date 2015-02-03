@@ -14,26 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cursor_image_enabler.h"
+#include "cursor_enabler.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir_toolkit/event.h"
 
+#include <iostream>
+
 namespace mi = mir::input;
 
-CursorImageEnabler::CursorImageEnabler(
+CursorEnabler::CursorEnabler(
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<mir::graphics::CursorImage> const& default_image,
     std::chrono::milliseconds remove_pointer_timeout)
     : cursor_shown(false), remove_delay{static_cast<uint32_t>(remove_pointer_timeout.count())}, last_cursor_movement(0),
-    cursor(cursor), default_image(default_image)
+    cursor(cursor)
 {
+    std::cerr << "enabled " << std::endl;
     cursor->hide();
 }
 
-CursorImageEnabler::~CursorImageEnabler() = default;
+CursorEnabler::~CursorEnabler() = default;
 
-bool CursorImageEnabler::handle(MirEvent const& event)
+bool CursorEnabler::handle(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
     {
@@ -46,6 +48,7 @@ bool CursorImageEnabler::handle(MirEvent const& event)
         last_cursor_movement = event.motion.event_time;
     }
     else if (remove_delay &&
+             mir_input_event_type_touch == mir_input_event_get_type(ev) &&
              (event.motion.event_time - last_cursor_movement > remove_delay))
     {
         disable_cursor();
@@ -53,19 +56,21 @@ bool CursorImageEnabler::handle(MirEvent const& event)
     return false;
 }
 
-void CursorImageEnabler::enable_cursor()
+void CursorEnabler::enable_cursor()
 {
     if (!cursor_shown)
     {
-        cursor->show(*default_image);
+        std::cerr << "showing the cursor" << std::endl;
+        cursor->show();
         cursor_shown = true;
     }
 }
 
-void CursorImageEnabler::disable_cursor()
+void CursorEnabler::disable_cursor()
 {
     if (cursor_shown)
     {
+        std::cerr << "hiding the cursor" << std::endl;
         cursor->hide();
         cursor_shown = false;
     }

@@ -43,7 +43,6 @@ public:
     using mir::Server::the_compositor;
     using mir::Server::the_touch_visualizer;
     using mir::Server::the_cursor;
-    using mir::Server::the_default_cursor_image;
 
     virtual std::shared_ptr<Spinner> the_spinner();
     virtual std::shared_ptr<DMMessageHandler> the_dm_message_handler();

@@ -24,7 +24,7 @@
 #include "spinner.h"
 #include "screen_state_handler.h"
 #include "powerkey_handler.h"
-#include "cursor_image_enabler.h"
+#include "cursor_enabler.h"
 
 // Qt headers will introduce a #define of "signals"
 // but some mir headers use "signals" as a variable name in
@@ -164,9 +164,8 @@ void usc::SystemCompositor::qt_main()
             shutdown_timeout,
             *screen_state_handler);
 
-        cursor_image_enabler = std::make_shared<CursorImageEnabler>(
+        cursor_image_enabler = std::make_shared<CursorEnabler>(
             server->the_cursor(),
-            server->the_default_cursor_image(),
             remove_pointer_timeout);
 
         auto composite_filter = server->the_composite_event_filter();
