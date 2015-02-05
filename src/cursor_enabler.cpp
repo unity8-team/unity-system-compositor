@@ -19,8 +19,6 @@
 #include "mir/graphics/cursor.h"
 #include "mir_toolkit/event.h"
 
-#include <iostream>
-
 namespace mi = mir::input;
 
 CursorEnabler::CursorEnabler(
@@ -29,7 +27,6 @@ CursorEnabler::CursorEnabler(
     : cursor_shown(false), remove_delay{static_cast<uint32_t>(remove_pointer_timeout.count())}, last_cursor_movement(0),
     cursor(cursor)
 {
-    std::cerr << "enabled " << std::endl;
     cursor->hide();
 }
 
@@ -60,7 +57,6 @@ void CursorEnabler::enable_cursor()
 {
     if (!cursor_shown)
     {
-        std::cerr << "showing the cursor" << std::endl;
         cursor->show();
         cursor_shown = true;
     }
@@ -70,7 +66,6 @@ void CursorEnabler::disable_cursor()
 {
     if (cursor_shown)
     {
-        std::cerr << "hiding the cursor" << std::endl;
         cursor->hide();
         cursor_shown = false;
     }
