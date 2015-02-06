@@ -30,6 +30,8 @@
 
 namespace usc {class WorkerThread;}
 
+namespace mir { namespace graphics { class Cursor; } namespace input { class InputRegion; } }
+
 class DBusScreenAdaptor;
 class DBusScreenObserver;
 class QDBusInterface;
@@ -42,7 +44,7 @@ class DBusScreen : public QObject, protected QDBusContext
     Q_CLASSINFO("D-Bus Interface", "com.canonical.Unity.Screen")
 
 public:
-    explicit DBusScreen(DBusScreenObserver& observer, QObject *parent = 0);
+    explicit DBusScreen(DBusScreenObserver& observer, std::shared_ptr<mir::input::InputRegion> const& region, std::shared_ptr<mir::graphics::Cursor> const& cursor, QObject *parent = 0);
     virtual ~DBusScreen();
 
     void emit_power_state_change(MirPowerMode mode, PowerStateChangeReason reason);
@@ -59,6 +61,7 @@ public Q_SLOTS:
     void setInactivityTimeouts(int poweroff_timeout, int dimmer_timeout);
     
     void setTouchVisualizationEnabled(bool enabled);
+    void overrideOrientation(unsigned int index, int orientation);
 
 private Q_SLOTS:
     void remove_display_on_requestor(QString const& requestor);
@@ -72,6 +75,8 @@ private:
     std::unordered_map<std::string, std::unordered_set<int>> display_requests;
     DBusScreenObserver* const observer;
     std::unique_ptr<usc::WorkerThread> worker_thread;
+    std::shared_ptr<mir::input::InputRegion> const region;
+    std::shared_ptr<mir::graphics::Cursor> const cursor;
 };
 
 #endif /* DBUS_SCREEN_H_ */

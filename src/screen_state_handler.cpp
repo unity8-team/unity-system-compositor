@@ -47,7 +47,7 @@ ScreenStateHandler::ScreenStateHandler(std::shared_ptr<usc::Server> const& serve
               std::bind(&ScreenStateHandler::power_off_alarm_notification, this))},
       dimmer_alarm{server->the_main_loop()->create_alarm(
               std::bind(&ScreenStateHandler::dimmer_alarm_notification, this))},
-      dbus_screen{new DBusScreen(*this)}
+      dbus_screen{new DBusScreen(*this, server->the_input_region(), server->the_cursor())}
 {
     /*
      * Make sure the compositor is running as certain conditions can

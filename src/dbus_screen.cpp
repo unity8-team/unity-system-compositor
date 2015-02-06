@@ -20,6 +20,9 @@
 #include "power_state_change_reason.h"
 #include "worker_thread.h"
 
+#include "mir/input/input_region.h"
+#include "mir/graphics/cursor.h"
+
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -53,12 +56,17 @@ enum DBusHandlerTaskId
 }
 
 
-DBusScreen::DBusScreen(DBusScreenObserver& observer, QObject *parent)
+DBusScreen::DBusScreen(DBusScreenObserver& observer,
+                       std::shared_ptr<mir::input::InputRegion> const& region,
+                       std::shared_ptr<mir::graphics::Cursor> const& cursor,
+                       QObject *parent)
     : QObject(parent),
       dbus_adaptor{new DBusScreenAdaptor(this)},
       service_watcher{new QDBusServiceWatcher()},
       observer{&observer},
-      worker_thread{new usc::WorkerThread("USC/DBusHandler")}
+      worker_thread{new usc::WorkerThread("USC/DBusHandler")},
+      region(region),
+      cursor(cursor)
 {
     QDBusConnection bus = QDBusConnection::systemBus();
     bus.registerObject("/com/canonical/Unity/Screen", this);
@@ -210,4 +218,10 @@ void DBusScreen::setInactivityTimeouts(int poweroff_timeout, int dimmer_timeout)
 void DBusScreen::setTouchVisualizationEnabled(bool enabled)
 {
     observer->set_touch_visualization_enabled(enabled);
+}
+
+void DBusScreen::overrideOrientation(unsigned int index, int orientation)
+{
+    region->override_orientation(index, static_cast<MirOrientation>(orientation));
+    cursor->override_orientation(index, static_cast<MirOrientation>(orientation));
 }
