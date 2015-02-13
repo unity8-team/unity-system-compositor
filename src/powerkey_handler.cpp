@@ -49,22 +49,28 @@ bool PowerKeyHandler::handle(MirEvent const& event)
     static const int32_t POWER_KEY_CODE = 26;
     static const int32_t SCREENSHOT_BUTTON_KEY_CODE = 25; /* Volume Decrease */
 
-    if (event.type == mir_event_type_key &&
-        event.key.key_code == SCREENSHOT_BUTTON_KEY_CODE)
-    {
-        if (event.key.action == mir_key_action_down)
-            screenshot_key_down();
-        else if (event.key.action == mir_key_action_up)
-            screenshot_key_up();
-    }
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return false;
+    auto input_event = mir_event_get_input_event(&event);
+    if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+        return false;
+    auto kev = mir_input_event_get_key_input_event(input_event);
+    auto key_code = mir_key_input_event_get_key_code(kev);
+    if (key_code != POWER_KEY_CODE && key_code != SCREENSHOT_BUTTON_KEY_CODE)
+        return false;
 
-    if (event.type == mir_event_type_key &&
-        event.key.key_code == POWER_KEY_CODE)
-    {
-        if (event.key.action == mir_key_action_down)
+    auto action = mir_key_input_event_get_action(kev);
+    if (action == mir_key_input_event_action_down) {
+        if (key_code == POWER_KEY_CODE)
             power_key_down();
-        else if (event.key.action == mir_key_action_up)
+        else if (key_code == SCREENSHOT_BUTTON_KEY_CODE)
+            screenshot_key_down();
+    }
+    else if (action == mir_key_input_event_action_up) {
+        if (key_code == POWER_KEY_CODE)
             power_key_up();
+        else if (key_code == SCREENSHOT_BUTTON_KEY_CODE)
+            screenshot_key_up();
     }
 
     return false;
