@@ -65,13 +65,25 @@ bool ScreenStateHandler::handle(MirEvent const& event)
     if (mir_event_get_type(&event) != mir_event_type_input)
         return false;
 
-    auto input_event_type = mir_input_event_get_type(mir_event_get_input_event(&event));
-    // TODO: We should consider resetting the timer for key events too
-    // we have to make sure we wont introduce a bug where pressing the power
-    // key (to turn screen off) or just the volume keys will wake the screen though!
-    if (!(input_event_type == mir_input_event_type_touch
-          || input_event_type == mir_input_event_type_pointer))
-        return false;
+    const int VOLUME_UP = 24;
+    const int VOLUME_DOWN = 25;
+    const int POWER_KEY = 26;
+    auto input_event = mir_event_get_input_event(&event);
+    auto input_event_type = mir_input_event_get_type(input_event);
+    if (input_event_type == mir_input_event_type_key)
+    {
+        auto key_event = mir_input_event_get_key_input_event(input_event);
+        auto key_code = mir_key_input_event_get_key_code(key_event);
+
+        if (key_code == VOLUME_UP || key_code == VOLUME_DOWN || key_code == POWER_KEY)
+            return false;
+
+        if (current_power_mode != MirPowerMode::mir_power_mode_on)
+            set_screen_power_mode(MirPowerMode::mir_power_mode_on, PowerStateChangeReason::unknown);
+    }
+    else if (input_event_type == mir_input_event_type_pointer
+             && current_power_mode != MirPowerMode::mir_power_mode_on)
+        set_screen_power_mode(MirPowerMode::mir_power_mode_on, PowerStateChangeReason::unknown);
 
     std::lock_guard<std::mutex> lock{guard};
     reset_timers_l();
