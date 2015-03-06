@@ -49,6 +49,12 @@ ScreenStateHandler::ScreenStateHandler(std::shared_ptr<usc::Server> const& serve
               std::bind(&ScreenStateHandler::dimmer_alarm_notification, this))},
       dbus_screen{new DBusScreen(*this)}
 {
+    /*
+     * Make sure the compositor is running as certain conditions can
+     * cause Mir to tear down the compositor threads before we get
+     * to this point. See bug #1410381.
+     */
+    server->the_compositor()->start();
     reset_timers_l();
 }
 
@@ -56,13 +62,22 @@ ScreenStateHandler::~ScreenStateHandler() = default;
 
 bool ScreenStateHandler::handle(MirEvent const& event)
 {
-    if (event.type == mir_event_type_motion)
-    {
-        std::lock_guard<std::mutex> lock{guard};
-        reset_timers_l();
-        if (current_power_mode == MirPowerMode::mir_power_mode_on)
-            powerd_mediator->set_normal_backlight();
-    }
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return false;
+
+    auto input_event_type = mir_input_event_get_type(mir_event_get_input_event(&event));
+    // TODO: We should consider resetting the timer for key events too
+    // we have to make sure we wont introduce a bug where pressing the power
+    // key (to turn screen off) or just the volume keys will wake the screen though!
+    if (!(input_event_type == mir_input_event_type_touch
+          || input_event_type == mir_input_event_type_pointer))
+        return false;
+
+    std::lock_guard<std::mutex> lock{guard};
+    reset_timers_l();
+    if (current_power_mode == MirPowerMode::mir_power_mode_on)
+        powerd_mediator->set_normal_backlight();
+
     return false;
 }
 
