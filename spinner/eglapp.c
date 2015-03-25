@@ -92,17 +92,7 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
 {
     (void) surface;
     (void) context;
-    if (ev->type == mir_event_type_resize)
-    {
-        /*
-         * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
-         * It is unsafe to set the width and height here because we're in a
-         * different thread to that doing the rendering. So we either need
-         * support for event queuing (directing them to another thread) or
-         * full single-threaded callbacks. (LP: #1194384).
-         */
-        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
-    }
+    (void) ev;
 }
 
 static const MirDisplayOutput *find_active_output(
