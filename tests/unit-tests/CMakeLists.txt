@@ -23,8 +23,7 @@ add_executable(
   usc_unit_tests
 
   test_session_switcher.cpp
-# FIXME: Can't build any more as of Mir 0.13
-#  test_screen_event_handler.cpp
+  test_screen_event_handler.cpp
   test_mir_screen.cpp
 
   advanceable_timer.cpp
