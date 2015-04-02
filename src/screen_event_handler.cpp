@@ -19,6 +19,7 @@
 #include "power_state_change_reason.h"
 
 #include <mir/time/alarm_factory.h>
+#include <mir_toolkit/events/input/input_event.h>
 
 #include <cstdio>
 
