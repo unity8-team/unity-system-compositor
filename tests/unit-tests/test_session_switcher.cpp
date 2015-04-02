@@ -104,18 +104,6 @@ public:
 
     std::string name() const override { return name_; }
 
-    std::shared_ptr<mir::frontend::BufferStream> get_buffer_stream(mir::frontend::BufferStreamId) const override
-    {
-        return {};
-    }
-    void destroy_buffer_stream(mir::frontend::BufferStreamId) override
-    {
-    }
-    mir::frontend::BufferStreamId create_buffer_stream(mir::graphics::BufferProperties const&) override
-    {
-        return mir::frontend::BufferStreamId();
-    }
-
 private:
     std::string const name_;
 };
