@@ -24,6 +24,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir_toolkit/events/input/input_event.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -56,14 +57,14 @@ struct TestCursorEnabler : ::testing::Test
     MirEvent *key_event;
     TestCursorEnabler()
     {
-        mouse_event = mev::make_event(mir_input_event_type_pointer, 1000, mir_input_event_modifier_none,
-                                      mir_pointer_action_motion, {}, 100, 100, 0, 0).get();
+        // Naughty Gerry, dropping pointers!
+        mouse_event = mev::make_event(mir_input_event_type_pointer, 10, mir_input_event_modifier_none,
+                                      mir_pointer_action_motion, {}, 1, 1, 0, 0).release();
 
-        touch_event = mev::make_event(mir_input_event_type_touch, 6000, 0).get();
+        touch_event = mev::make_event(mir_input_event_type_touch, 6000, 0).release();
         mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_unknown, 1, 1, 0, 0, 0, 0);
 
-        key_event = mev::make_event(mir_input_event_type_key, 6000, mir_keyboard_action_up, 0, 0,
-                                    mir_input_event_modifier_none).get();
+        key_event = mev::make_event(mir_input_event_type_key, 6000, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_none).release();
     }
 };
 }
