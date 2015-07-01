@@ -30,6 +30,8 @@ class EventFilter;
 }
 }
 
+class CursorEnabler;
+
 namespace usc
 {
 
@@ -53,6 +55,7 @@ private:
     std::shared_ptr<Screen> screen;
     std::shared_ptr<mir::input::EventFilter> screen_event_handler;
     std::shared_ptr<UnityScreenService> unity_screen_service;
+    std::shared_ptr<CursorEnabler> cursor_enabler;
 };
 
 }

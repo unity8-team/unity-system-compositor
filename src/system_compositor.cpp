@@ -20,6 +20,7 @@
 #include "system_compositor.h"
 #include "server.h"
 #include "dm_connection.h"
+#include "cursor_enabler.h"
 
 #include <mir/input/composite_event_filter.h>
 #include <mir/abnormal_exit.h>
@@ -87,6 +88,8 @@ void usc::SystemCompositor::run()
         return;
     }
 
+    std::chrono::milliseconds remove_pointer_timeout{server->remove_pointer_timeout()};
+
     server->add_init_callback([&]
         {
             auto vendor = (char *) glGetString(GL_VENDOR);
@@ -118,8 +121,15 @@ void usc::SystemCompositor::run()
                 screen = server->the_screen();
                 screen_event_handler = server->the_screen_event_handler();
 
+                cursor_enabler = std::make_shared<CursorEnabler>(
+                    server->the_cursor(),
+                    remove_pointer_timeout);
+
                 auto composite_filter = server->the_composite_event_filter();
                 composite_filter->append(screen_event_handler);
+
+                if (server->enable_hardware_cursor())
+                    composite_filter->append(cursor_enabler);
 
                 unity_screen_service = server->the_unity_screen_service();
             }

@@ -108,22 +108,10 @@ usc::Server::Server(int argc, char** argv)
     add_configuration_option("shutdown-timeout", "The time in milli-seconds the power key must be held to initiate a clean system shutdown",  mir::OptionType::integer);
     add_configuration_option("power-key-ignore-timeout", "The time in milli-seconds the power key must be held to ignore - must be less than shutdown-timeout",  mir::OptionType::integer);
     add_configuration_option("disable-inactivity-policy", "Disables handling user inactivity and power key",  mir::OptionType::boolean);
-
+    add_configuration_option("remove_pointer_timeout", "The time in milli-seconds the cursor image stays visible after touch screen is used again - by default the cursor image stays visible",  mir::OptionType::integer);
     set_command_line(argc, const_cast<char const **>(argv));
 
     set_command_line_handler(&ignore_unknown_arguments);
-
-    wrap_cursor_listener([this](std::shared_ptr<mir::input::CursorListener> const& default_)
-        -> std::shared_ptr<mir::input::CursorListener>
-        {
-            // This is a workaround for u8 desktop preview in 14.04 for the lack of client cursor API.
-            // We need to disable the cursor for XMir but leave it on for the desktop preview.
-            // Luckily as it stands they run inside seperate instances of USC. ~racarr
-            if (enable_hardware_cursor())
-                return default_;
-            else
-                return std::make_shared<NullCursorListener>();
-        });
 
     override_the_server_status_listener([this]()
         -> std::shared_ptr<mir::ServerStatusListener>

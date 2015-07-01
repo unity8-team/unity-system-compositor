@@ -50,6 +50,7 @@ public:
 
     using mir::Server::add_init_callback;
     using mir::Server::run;
+    using mir::Server::the_cursor;
     using mir::Server::the_main_loop;
     using mir::Server::the_composite_event_filter;
     using mir::Server::the_display;
@@ -91,6 +92,16 @@ public:
         return the_options()->get("file", "/tmp/mir_socket");
     }
 
+    int remove_pointer_timeout()
+    {
+       return the_options()->get("remove-pointer-timeout", 0);
+    }
+
+    bool enable_hardware_cursor()
+    {
+        return the_options()->get("enable-hardware-cursor", false);
+    }
+
 private:
     inline auto the_options()
     -> decltype(mir::Server::get_options())
@@ -120,11 +131,6 @@ private:
     {
         return std::chrono::milliseconds{
             the_options()->get("power-key-ignore-timeout", 2000)};
-    }
-
-    bool enable_hardware_cursor()
-    {
-        return the_options()->get("enable-hardware-cursor", false);
     }
 
     std::string spinner_executable()

@@ -22,6 +22,7 @@ include_directories(
 add_executable(
   usc_unit_tests
 
+  test_cursor_enabler.cpp
   test_session_switcher.cpp
   test_screen_event_handler.cpp
   test_mir_screen.cpp

@@ -16,6 +16,7 @@
 
 set(USC_SRCS
   asio_dm_connection.cpp
+  cursor_enabler.cpp
   dbus_connection_handle.cpp
   dbus_event_loop.cpp
   dbus_message_handle.cpp
