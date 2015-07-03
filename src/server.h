@@ -100,7 +100,7 @@ public:
 
     bool enable_hardware_cursor()
     {
-        return the_options()->get("enable-hardware-cursor", false);
+        return the_options()->get("enable-hardware-cursor", true);
     }
 
 private:
