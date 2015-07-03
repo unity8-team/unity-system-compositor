@@ -28,8 +28,8 @@ enum class PowerStateChangeReason;
 namespace mir
 {
 namespace compositor { class Compositor; }
-namespace graphics {class Display;}
-namespace input { class TouchVisualizer; }
+namespace graphics {class Display; class Cursor;}
+namespace input { class TouchVisualizer; class InputRegion; }
 namespace time { class AlarmFactory; class Alarm; }
 }
 
@@ -46,6 +46,8 @@ public:
               std::shared_ptr<mir::graphics::Display> const& display,
               std::shared_ptr<mir::input::TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<mir::time::AlarmFactory> const& alarm_factory,
+              std::shared_ptr<mir::input::InputRegion> const& region,
+              std::shared_ptr<mir::graphics::Cursor> const& cursor,
               std::chrono::milliseconds power_off_timeout,
               std::chrono::milliseconds dimmer_timeout);
     ~MirScreen();
@@ -61,6 +63,7 @@ public:
     void set_inactivity_timeouts(int power_off_timeout, int dimmer_timeout) override;
 
     void set_touch_visualization_enabled(bool enabled) override;
+    void override_orientation(unsigned int index, int orientation) override;
     void register_power_state_change_handler(
             PowerStateChangeHandler const& power_state_change_handler) override;
 
@@ -81,6 +84,8 @@ private:
     std::shared_ptr<mir::graphics::Display> const display;
     std::shared_ptr<mir::input::TouchVisualizer> const touch_visualizer;
     std::shared_ptr<mir::time::AlarmFactory> const alarm_factory;
+    std::shared_ptr<mir::input::InputRegion> const region;
+    std::shared_ptr<mir::graphics::Cursor> const cursor;
     std::unique_ptr<mir::time::Alarm> const power_off_alarm;
     std::unique_ptr<mir::time::Alarm> const dimmer_alarm;
 

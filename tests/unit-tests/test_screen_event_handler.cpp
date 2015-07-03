@@ -46,6 +46,7 @@ struct MockScreen : usc::Screen
     MOCK_METHOD2(set_inactivity_timeouts, void(int power_off_timeout, int dimmer_timeout));
 
     MOCK_METHOD1(set_touch_visualization_enabled, void(bool enabled));
+    MOCK_METHOD2(override_orientation, void(unsigned int, int));
     MOCK_METHOD1(register_power_state_change_handler, void(
                  usc::PowerStateChangeHandler const& handler));
 };

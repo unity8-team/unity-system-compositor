@@ -56,6 +56,7 @@ public:
     using mir::Server::the_display;
     using mir::Server::the_compositor;
     using mir::Server::the_touch_visualizer;
+    using mir::Server::the_input_region;
 
     virtual std::shared_ptr<Spinner> the_spinner();
     virtual std::shared_ptr<DMMessageHandler> the_dm_message_handler();

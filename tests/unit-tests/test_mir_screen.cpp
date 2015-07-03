@@ -26,6 +26,8 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/gl_context.h>
 #include <mir/input/touch_visualizer.h>
+#include <mir/input/input_region.h>
+#include <mir/graphics/cursor.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -127,6 +129,23 @@ struct MockTouchVisualizer : mir::input::TouchVisualizer
     void visualize_touches(std::vector<Spot> const& touches) override {}
 };
 
+struct MockInputRegion : mir::input::InputRegion
+{
+    MOCK_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
+    MOCK_METHOD1(confine, void(mir::geometry::Point&));
+    MOCK_METHOD2(override_orientation, void(uint32_t, MirOrientation));
+    MOCK_METHOD1(get_orientation, MirOrientation(mir::geometry::Point const&));
+};
+
+struct MockCursor : mir::graphics::Cursor
+{
+    void show() {}
+    void show(mg::CursorImage const& ) {}
+    void hide() {}
+    void move_to(mir::geometry::Point) {}
+    void override_orientation(uint32_t, MirOrientation) {}
+};
+
 struct AMirScreen : testing::Test
 {
     std::chrono::milliseconds power_off_timeout{5000};
@@ -194,6 +213,10 @@ struct AMirScreen : testing::Test
         std::make_shared<testing::NiceMock<MockTouchVisualizer>>()};
     std::shared_ptr<AdvanceableTimer> timer{
         std::make_shared<AdvanceableTimer>()};
+    std::shared_ptr<MockCursor> cursor{
+        std::make_shared<testing::NiceMock<MockCursor>>()};
+    std::shared_ptr<MockInputRegion> region{
+        std::make_shared<MockInputRegion>()};
 
     usc::MirScreen mir_screen{
         screen_hardware,
@@ -201,6 +224,8 @@ struct AMirScreen : testing::Test
         display,
         touch_visualizer,
         timer,
+        region,
+        cursor,
         power_off_timeout,
         dimmer_timeout};
 };

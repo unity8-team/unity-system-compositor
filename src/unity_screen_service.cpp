@@ -207,6 +207,24 @@ DBusHandlerResult usc::UnityScreenService::handle_dbus_message(
             dbus_connection_send(connection, reply, nullptr);
         }
     }
+    else if (dbus_message_is_method_call(message, dbus_screen_interface, "overrideOrientation"))
+    {
+        uint32_t display_id{0};
+        int32_t orientation{0};
+        dbus_message_get_args(
+            message, &args_error,
+            DBUS_TYPE_UINT32, &display_id,
+            DBUS_TYPE_INT32, &orientation,
+            DBUS_TYPE_INVALID);
+
+        if (!args_error)
+        {
+            dbus_overrideOrientation(display_id, orientation);
+
+            DBusMessageHandle reply{dbus_message_new_method_return(message)};
+            dbus_connection_send(connection, reply, nullptr);
+        }
+    }
     else if (dbus_message_is_signal(message, "org.freedesktop.DBus", "NameOwnerChanged"))
     {
         char const* name = nullptr;
@@ -319,6 +337,14 @@ void usc::UnityScreenService::dbus_removeDisplayOnRequest(
 
     if (keep_display_on_ids.empty())
         screen->keep_display_on(false);
+}
+
+void usc::UnityScreenService::dbus_overrideOrientation(
+    uint32_t display_id, int32_t orientation)
+{
+    std::lock_guard<std::mutex> lock{keep_display_on_mutex};
+
+    screen->override_orientation(display_id, orientation);
 }
 
 void usc::UnityScreenService::dbus_NameOwnerChanged(

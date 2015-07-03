@@ -44,6 +44,7 @@ struct MockCursor : mir::graphics::Cursor
     MOCK_METHOD1(show, void(mir::graphics::CursorImage const&));
     MOCK_METHOD0(hide, void());
     MOCK_METHOD1(move_to, void(mir::geometry::Point));
+    MOCK_METHOD2(override_orientation, void(uint32_t, MirOrientation));
 };
 
 struct TestCursorEnabler : ::testing::Test

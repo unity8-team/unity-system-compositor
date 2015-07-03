@@ -43,6 +43,7 @@ public:
     virtual void set_inactivity_timeouts(int power_off_timeout, int dimmer_timeout) = 0;
 
     virtual void set_touch_visualization_enabled(bool enabled) = 0;
+    virtual void override_orientation(unsigned int index, int orientation) = 0;
     virtual void register_power_state_change_handler(
             PowerStateChangeHandler const& handler) = 0;
 
