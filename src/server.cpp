@@ -102,7 +102,7 @@ usc::Server::Server(int argc, char** argv)
     add_configuration_option("version", "Show version of Unity System Compositor",  mir::OptionType::null);
     add_configuration_option("spinner", "Path to spinner executable",  mir::OptionType::string);
     add_configuration_option("public-socket", "Make the socket file publicly writable",  mir::OptionType::boolean);
-    add_configuration_option("enable-hardware-cursor", "Enable the hardware cursor (disabled by default)",  mir::OptionType::boolean);
+    add_configuration_option("enable-hardware-cursor", "Enable the hardware cursor (enabled by default)",  mir::OptionType::boolean);
     add_configuration_option("inactivity-display-off-timeout", "The time in seconds before the screen is turned off when there are no active sessions",  mir::OptionType::integer);
     add_configuration_option("inactivity-display-dim-timeout", "The time in seconds before the screen is dimmed when there are no active sessions",  mir::OptionType::integer);
     add_configuration_option("shutdown-timeout", "The time in milli-seconds the power key must be held to initiate a clean system shutdown",  mir::OptionType::integer);
