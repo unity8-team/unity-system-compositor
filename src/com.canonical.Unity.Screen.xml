@@ -25,5 +25,9 @@
     <method name='setTouchVisualizationEnabled'>
       <arg name='enabled' type='b' direction='in'/>
     </method>
+    <method name='overrideOrientation'>
+      <arg name='display_id' type='u' direction='in'/>
+      <arg name='orientation' type='i' direction='in'/>
+    </method>
   </interface>
 </node>
