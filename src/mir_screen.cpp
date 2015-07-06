@@ -259,4 +259,20 @@ void usc::MirScreen::override_orientation(unsigned int index, int orientation)
 {
     region->override_orientation(index, static_cast<MirOrientation>(orientation));
     cursor->override_orientation(index, static_cast<MirOrientation>(orientation));
+
+    if (index > 0) {
+        std::shared_ptr<mg::DisplayConfiguration> displayConfig = display->configuration();
+
+        displayConfig->for_each_output(
+            [&](mg::UserDisplayConfigurationOutput &displayConfigOutput) {
+                if (displayConfigOutput.id.as_value() > 0) {
+                    displayConfigOutput.orientation = static_cast<MirOrientation>(orientation);
+                }
+            }
+        );
+
+        compositor->stop();
+        display->configure(*displayConfig.get());
+        compositor->start();
+    }
 }

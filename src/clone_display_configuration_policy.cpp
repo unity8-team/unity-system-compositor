@@ -33,7 +33,7 @@ void CloneDisplayConfigurationPolicy::apply_to(mir::graphics::DisplayConfigurati
     conf.for_each_output(
                 [&](mg::UserDisplayConfigurationOutput& displayConfigOutput) {
         if (displayConfigOutput.id.as_value() > 0) { printf("Here\n");
-            displayConfigOutput.orientation = mir_orientation_right;
+            displayConfigOutput.orientation = mir_orientation_left;
         }
     }
     );
