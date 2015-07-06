@@ -25,6 +25,7 @@
 #include "screen_event_handler.h"
 #include "powerd_mediator.h"
 #include "unity_screen_service.h"
+#include "clone_display_configuration_policy.h"
 
 #include <mir/input/cursor_listener.h>
 #include <mir/server_status_listener.h>
@@ -38,6 +39,7 @@ namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -127,6 +129,14 @@ usc::Server::Server(int argc, char** argv)
              the_session_coordinator(),
              the_session_switcher());
        });
+
+    wrap_display_configuration_policy(
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
+            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            return std::make_shared<CloneDisplayConfigurationPolicy>(wrapped);
+        });
+
 
     set_config_filename("unity-system-compositor.conf");
 
