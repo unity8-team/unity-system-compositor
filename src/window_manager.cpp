@@ -20,6 +20,8 @@
 
 #include "session_switcher.h"
 
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/session.h"
@@ -37,6 +39,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -121,10 +124,12 @@ struct SessionReadyObserver : ms::NullSurfaceObserver,
 
 usc::WindowManager::WindowManager(
     mir::shell::FocusController* focus_controller,
+    std::shared_ptr<mir::graphics::Display> const& display,
     std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<SessionSwitcher> const& session_switcher) :
     focus_controller{focus_controller},
+    display{display},
     display_layout{display_layout},
     session_coordinator{session_coordinator},
     session_switcher{session_switcher}
@@ -183,6 +188,8 @@ auto usc::WindowManager::add_surface(
 
     surface->add_observer(session_ready_observer);
 
+    surfaces.push_back(surface);
+
     return result;
 }
 
@@ -197,16 +204,26 @@ void usc::WindowManager::modify_surface(
 
 void usc::WindowManager::remove_surface(
     std::shared_ptr<ms::Session> const& /*session*/,
-    std::weak_ptr<ms::Surface> const& /*surface*/)
+    std::weak_ptr<ms::Surface> const& surface)
 {
+    auto it = surfaces.begin();
+    for ( ; it != surfaces.end(); ) {
+        if (surface.lock() == *it) {
+            it = surfaces.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void usc::WindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
+    resize_scene_to_cloned_display_intersection();
 }
 
 void usc::WindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
 {
+    resize_scene_to_cloned_display_intersection();
 }
 
 bool usc::WindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
@@ -231,4 +248,32 @@ int usc::WindowManager::set_surface_attribute(
     int value)
 {
     return surface->configure(attrib, value);
+}
+
+void usc::WindowManager::resize_scene_to_cloned_display_intersection()
+{
+    using namespace mir::geometry;
+    // Determine display intersection geometry - they should already be cloned and have
+    // orientation (i.e. both landscape)
+
+    Size intersection{999999, 999999};
+    auto displayConfig = display->configuration();
+    displayConfig->for_each_output(
+                [&](mg::DisplayConfigurationOutput const& displayConfigOutput){
+        if (!displayConfigOutput.connected || !displayConfigOutput.used)
+            return;
+
+        Size size = displayConfigOutput.extents().size;
+        if (size.width < intersection.width)
+            intersection.width = size.width;
+        if (size.height < intersection.height)
+            intersection.height = size.height;
+    });
+
+    std::cout << "Intersection" << intersection.width << intersection.height << std::endl;
+
+    // Now resize all surfaces in scene to this value
+    for (auto &s : surfaces) {
+        s->resize(intersection);
+    }
 }

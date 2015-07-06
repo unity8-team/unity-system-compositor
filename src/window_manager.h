@@ -20,9 +20,11 @@
 #define USC_WINDOW_MANAGER_H_
 
 #include <mir/shell/window_manager.h>
+#include <vector>
 
 namespace mir
 {
+namespace graphics { class Display; }
 namespace scene { class PlacementStrategy; class SessionCoordinator; }
 namespace shell { class FocusController; class DisplayLayout; }
 }
@@ -36,6 +38,7 @@ class WindowManager : public mir::shell::WindowManager
 public:
     explicit WindowManager(
         mir::shell::FocusController* focus_controller,
+        std::shared_ptr<mir::graphics::Display> const& display,
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
         std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<SessionSwitcher> const& session_switcher);
@@ -75,10 +78,14 @@ public:
         int value) override;
 
 private:
+    void resize_scene_to_cloned_display_intersection();
+
     mir::shell::FocusController* const focus_controller;
+    std::shared_ptr<mir::graphics::Display> display;
     std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
     std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<SessionSwitcher> const session_switcher;
+    std::vector<std::shared_ptr<mir::scene::Surface>> surfaces;
 };
 }
 
