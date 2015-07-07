@@ -21,6 +21,8 @@
 
 #include <mir/frontend/session.h>
 
+#include <stdio.h>
+
 usc::SessionSwitcher::SessionSwitcher(std::shared_ptr<Spinner> const& spinner)
     : spinner_process{spinner},
       booting{true}
@@ -29,6 +31,7 @@ usc::SessionSwitcher::SessionSwitcher(std::shared_ptr<Spinner> const& spinner)
 
 void usc::SessionSwitcher::add(std::shared_ptr<Session> const& session, pid_t pid)
 {
+    printf("SessionSwitcher Adding session %s\n", session->name().c_str());
     std::lock_guard<std::mutex> lock{mutex};
 
     if (pid == spinner_process->pid())
@@ -40,6 +43,7 @@ void usc::SessionSwitcher::add(std::shared_ptr<Session> const& session, pid_t pi
 
 void usc::SessionSwitcher::remove(std::shared_ptr<mir::frontend::Session> const& session)
 {
+    printf("SessionSwitcher Removing session %s\n", session->name().c_str());
     std::lock_guard<std::mutex> lock{mutex};
 
     auto const& name = session->name();
@@ -65,6 +69,7 @@ void usc::SessionSwitcher::remove(std::shared_ptr<mir::frontend::Session> const&
 
 void usc::SessionSwitcher::set_active_session(std::string const& name)
 {
+    printf("SessionSwitcher Setting active session %s \n", name.c_str());
     std::lock_guard<std::mutex> lock{mutex};
 
     active_name = name;
@@ -73,6 +78,7 @@ void usc::SessionSwitcher::set_active_session(std::string const& name)
 
 void usc::SessionSwitcher::set_next_session(std::string const& name)
 {
+    printf("SessionSwitcher Setting next session %s \n", name.c_str());
     std::lock_guard<std::mutex> lock{mutex};
 
     next_name = name;
@@ -81,6 +87,7 @@ void usc::SessionSwitcher::set_next_session(std::string const& name)
 
 void usc::SessionSwitcher::mark_ready(mir::frontend::Session const* session)
 {
+    printf("SessionSwitcher mark ready %s\n", session->name().c_str());
     std::lock_guard<std::mutex> lock{mutex};
 
     for (auto& pair : sessions)
@@ -94,6 +101,7 @@ void usc::SessionSwitcher::mark_ready(mir::frontend::Session const* session)
 
 void usc::SessionSwitcher::update_displayed_sessions()
 {
+    printf("SessionSwitcher Updating displayed sessions \n");
     hide_uninteresting_sessions();
 
     bool show_spinner = false;
@@ -148,6 +156,7 @@ void usc::SessionSwitcher::hide_uninteresting_sessions()
         if (pair.second.session->name() != active_name &&
             pair.second.session->name() != next_name)
         {
+            printf("Hiding session %s \n", pair.second.session->name().c_str());
             pair.second.session->hide();
         }
     }
@@ -171,10 +180,14 @@ void usc::SessionSwitcher::show_session(
     std::string const& name,
     ShowMode show_mode)
 {
+    printf("SessionSwitcher Showing session %s %d \n", name.c_str(), (int)show_mode);
     auto& session = sessions[name].session;
 
     if (show_mode == ShowMode::as_active)
+        {
+            printf("SessionSwitcher Raise and focus \n");   
         session->raise_and_focus();
+        }
 
     session->show();
 }
@@ -182,6 +195,7 @@ void usc::SessionSwitcher::show_session(
 void usc::SessionSwitcher::hide_session(std::string const& name)
 {
     auto& session = sessions[name].session;
+    printf("SessionSwitcher Hding %s \n", name.c_str());
     session->hide();
 }
 
