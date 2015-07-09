@@ -20,6 +20,64 @@
 
 #include <unistd.h>
 #include <signal.h>
+#include <sys/wait.h>
+
+namespace
+{
+
+void write_pid(int fd, pid_t pid)
+{
+    auto const pid_str = std::to_string(pid);
+    size_t nwritten = 0;
+
+    while (nwritten < pid_str.size())
+    {
+        auto const n = write(fd, pid_str.data() + nwritten, pid_str.size() - nwritten);
+        if (n < 0)
+        {
+            if (errno != EINTR)
+                return;
+        }
+        else if (n == 0)
+        {
+            return;
+        }
+        else
+        {
+            nwritten += n;
+        }
+    }
+}
+
+pid_t read_pid(int fd)
+{
+    std::string pid_str;
+    bool more_data_to_read = true;
+
+    while (more_data_to_read)
+    {
+        size_t const bufsize = 256;
+        char data[bufsize];
+        auto const nread = read(fd, data, bufsize);
+        if (nread < 0)
+        {
+            if (errno != EINTR)
+                return 0;
+        }
+        else if (nread == 0)
+        {
+            more_data_to_read = false;
+        }
+        else
+        {
+            pid_str.append(data, nread);
+        }
+    }
+
+    return std::atoi(pid_str.c_str());
+}
+
+}
 
 usc::ExternalSpinner::ExternalSpinner(
     std::string const& executable,
@@ -42,16 +100,39 @@ void usc::ExternalSpinner::ensure_running()
     if (executable.empty() || spinner_pid)
         return;
 
-    auto pid = fork();
+    /* Use a double fork to avoid zombie processes */
+    int pipefd[2] {0,0};
+    if (pipe(pipefd)) {}
+
+    auto const pid = fork();
     if (!pid)
     {
-        setenv("MIR_SOCKET", mir_socket.c_str(), 1);
-        execlp(executable.c_str(), executable.c_str(), nullptr);
+        close(pipefd[0]);
+
+        auto const spid = fork();
+        if (!spid)
+        {
+            close(pipefd[1]);
+            setenv("MIR_SOCKET", mir_socket.c_str(), 1);
+            execlp(executable.c_str(), executable.c_str(), nullptr);
+        }
+        else
+        {
+            /* Send the spinner pid to grandparent (USC) */
+            write_pid(pipefd[1], spid);
+            close(pipefd[1]);
+            exit(0);
+        }
     }
     else
     {
-        spinner_pid = pid;
+        close(pipefd[1]);
+        waitpid(pid, nullptr, 0);
+        /* Get spinner pid from grandchild */
+        spinner_pid = read_pid(pipefd[0]);
     }
+
+    close(pipefd[0]);
 }
 
 void usc::ExternalSpinner::kill()
