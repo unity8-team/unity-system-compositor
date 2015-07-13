@@ -61,6 +61,7 @@ private:
     bool dbus_setScreenPowerMode(std::string const& mode, int32_t reason);
     int32_t dbus_keepDisplayOn(std::string const& sender);
     void dbus_removeDisplayOnRequest(std::string const& sender, int32_t id);
+    void dbus_notifyLocked(dbus_bool_t locked);
     void dbus_NameOwnerChanged(
         std::string const& name,
         std::string const& old_owner,

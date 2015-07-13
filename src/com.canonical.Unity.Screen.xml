@@ -25,5 +25,8 @@
     <method name='setTouchVisualizationEnabled'>
       <arg name='enabled' type='b' direction='in'/>
     </method>
+    <method name='notifyLocked'>
+      <arg name='locked' type='b' direction='in'/>
+    </method>
   </interface>
 </node>

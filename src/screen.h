@@ -45,6 +45,7 @@ public:
     virtual void set_touch_visualization_enabled(bool enabled) = 0;
     virtual void register_power_state_change_handler(
             PowerStateChangeHandler const& handler) = 0;
+    virtual void notify_locked(bool locked) = 0;
 
 protected:
     Screen() = default;

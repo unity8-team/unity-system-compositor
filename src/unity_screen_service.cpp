@@ -207,6 +207,22 @@ DBusHandlerResult usc::UnityScreenService::handle_dbus_message(
             dbus_connection_send(connection, reply, nullptr);
         }
     }
+    else if (dbus_message_is_method_call(message, dbus_screen_interface, "notifyLocked"))
+    {
+        dbus_bool_t locked{false};
+        dbus_message_get_args(
+            message, &args_error,
+            DBUS_TYPE_BOOLEAN, &locked,
+            DBUS_TYPE_INVALID);
+
+        if (!args_error)
+        {
+            dbus_notifyLocked(locked);
+
+            DBusMessageHandle reply{dbus_message_new_method_return(message)};
+            dbus_connection_send(connection, reply, nullptr);
+        }
+    }
     else if (dbus_message_is_signal(message, "org.freedesktop.DBus", "NameOwnerChanged"))
     {
         char const* name = nullptr;
@@ -319,6 +335,11 @@ void usc::UnityScreenService::dbus_removeDisplayOnRequest(
 
     if (keep_display_on_ids.empty())
         screen->keep_display_on(false);
+}
+
+void usc::UnityScreenService::dbus_notifyLocked(dbus_bool_t locked)
+{
+    screen->notify_locked(locked == TRUE);
 }
 
 void usc::UnityScreenService::dbus_NameOwnerChanged(

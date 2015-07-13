@@ -48,6 +48,7 @@ struct MockScreen : usc::Screen
     MOCK_METHOD1(set_touch_visualization_enabled, void(bool enabled));
     MOCK_METHOD1(register_power_state_change_handler, void(
                  usc::PowerStateChangeHandler const& handler));
+    MOCK_METHOD1(notify_locked, void(bool locked));
 
     MirPowerMode mock_mode = MirPowerMode::mir_power_mode_off;
 };

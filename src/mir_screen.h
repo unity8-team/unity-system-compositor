@@ -66,6 +66,7 @@ public:
     void set_touch_visualization_enabled(bool enabled) override;
     void register_power_state_change_handler(
             PowerStateChangeHandler const& power_state_change_handler) override;
+    void notify_locked(bool locked) override;
 
 private:
     struct Timeouts
@@ -103,6 +104,7 @@ private:
     MirPowerMode current_power_mode;
     bool restart_timers;
     PowerStateChangeHandler power_state_change_handler;
+    bool locked;
 };
 
 }

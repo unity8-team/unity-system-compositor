@@ -57,6 +57,8 @@ struct MockScreen : usc::Screen
         power_state_change_handler = handler;
     }
 
+    MOCK_METHOD1(notify_locked, void(bool locked));
+
     usc::PowerStateChangeHandler power_state_change_handler;
 };
 
@@ -141,6 +143,15 @@ public:
         return invoke_with_reply<ut::DBusAsyncReplyVoid>(
             unity_screen_interface, "removeDisplayOnRequest",
             DBUS_TYPE_INT32, &id,
+            DBUS_TYPE_INVALID);
+    }
+
+    ut::DBusAsyncReplyVoid notify_locked(bool locked)
+    {
+        dbus_bool_t const l = locked ? TRUE : FALSE;
+        return invoke_with_reply<ut::DBusAsyncReplyVoid>(
+            unity_screen_interface, "notifyLocked",
+            DBUS_TYPE_BOOLEAN, &l,
             DBUS_TYPE_INVALID);
     }
 
@@ -363,6 +374,15 @@ TEST_F(AUnityScreenService, disables_keep_display_on_when_all_clients_disconnect
 
     request_processed.wait_for(default_timeout);
     EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUnityScreenService, forwards_notify_locked)
+{
+    bool const locked = true;
+
+    EXPECT_CALL(*mock_screen, notify_locked(locked));
+
+    client.notify_locked(locked);
 }
 
 TEST_F(AUnityScreenService, emits_power_state_change_signal)

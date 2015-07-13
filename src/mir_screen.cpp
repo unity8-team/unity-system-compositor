@@ -55,7 +55,8 @@ usc::MirScreen::MirScreen(
       dimming_timeout{dimmer_timeout},
       current_power_mode{MirPowerMode::mir_power_mode_on},
       restart_timers{true},
-      power_state_change_handler{[](MirPowerMode,PowerStateChangeReason){}}
+      power_state_change_handler{[](MirPowerMode,PowerStateChangeReason){}},
+      locked{true}
 {
     /*
      * Make sure the compositor is running as certain conditions can
@@ -71,6 +72,9 @@ usc::MirScreen::~MirScreen() = default;
 void usc::MirScreen::keep_display_on_temporarily()
 {
     std::lock_guard<std::mutex> lock{guard};
+    if (locked)
+        return;
+
     reset_timers_l(PowerStateChangeReason::inactivity);
     if (current_power_mode == MirPowerMode::mir_power_mode_on)
         screen_hardware->set_normal_backlight();
@@ -276,4 +280,12 @@ void usc::MirScreen::register_power_state_change_handler(
     std::lock_guard<std::mutex> lock{guard};
 
     power_state_change_handler = handler;
+}
+
+void usc::MirScreen::notify_locked(bool locked)
+{
+    std::lock_guard<std::mutex> lock{guard};
+
+    this->locked = locked;
+
 }

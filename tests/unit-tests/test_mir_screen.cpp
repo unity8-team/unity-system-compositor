@@ -264,12 +264,13 @@ TEST_F(AMirScreen, does_not_turn_on_screen_temporarily_when_off)
     mir_screen.keep_display_on_temporarily();
 }
 
-TEST_F(AMirScreen, keeps_screen_on_temporarily_when_already_on)
+TEST_F(AMirScreen, keeps_screen_on_temporarily_when_already_on_and_unlocked)
 {
     using namespace testing;
     std::chrono::seconds const fourty_seconds{40};
     std::chrono::seconds const ten_seconds{10};
 
+    mir_screen.notify_locked(false);
     expect_no_reconfiguration();
 
     // After keep_display_on_temporarily the timeouts should
@@ -293,6 +294,27 @@ TEST_F(AMirScreen, keeps_screen_on_temporarily_when_already_on)
     expect_screen_is_turned_off();
     timer->advance_by(ten_seconds);
 
+    verify_and_clear_expectations();
+}
+
+TEST_F(AMirScreen, ignores_keeps_screen_on_temporarily_when_locked)
+{
+    using namespace testing;
+    std::chrono::seconds const fourty_seconds{40};
+    std::chrono::seconds const ten_seconds{10};
+
+    // keep_display_on_temporarily should be ignored since the screen is locked
+    timer->advance_by(fourty_seconds);
+    mir_screen.keep_display_on_temporarily();
+
+    // Ten seconds more, 50 seconds from start, the screen should dim
+    expect_screen_is_turned_dim();
+    timer->advance_by(ten_seconds);
+    verify_and_clear_expectations();
+
+    // Ten seconds more, 60 seconds from start, the screen should power off
+    expect_screen_is_turned_off();
+    timer->advance_by(ten_seconds);
     verify_and_clear_expectations();
 }
 
@@ -391,7 +413,7 @@ TEST_F(AMirScreen, turns_screen_off_after_15s_for_notification)
     timer->advance_by(notification_power_off_timeout);
 }
 
-TEST_F(AMirScreen, keep_display_on_temporarily_overrides_notification_timeout)
+TEST_F(AMirScreen, keep_display_on_temporarily_ignored_if_screen_locked)
 {
     turn_screen_off();
 
@@ -399,6 +421,28 @@ TEST_F(AMirScreen, keep_display_on_temporarily_overrides_notification_timeout)
     mir_screen.set_screen_power_mode(MirPowerMode::mir_power_mode_on,
                                      PowerStateChangeReason::notification);
     verify_and_clear_expectations();
+
+    // At T=10 we request a temporary keep display on (e.g. user has touched
+    // the screen)
+    timer->advance_by(ten_seconds);
+    mir_screen.keep_display_on_temporarily();
+
+    // At T=15 screen should be turned off because of the notification timeout
+    expect_screen_is_turned_off();
+    timer->advance_by(five_seconds);
+}
+
+TEST_F(AMirScreen, keep_display_on_temporarily_overrides_notification_timeout_if_screen_unlocked)
+{
+    turn_screen_off();
+
+    expect_screen_is_turned_on();
+    mir_screen.set_screen_power_mode(MirPowerMode::mir_power_mode_on,
+                                     PowerStateChangeReason::notification);
+    verify_and_clear_expectations();
+
+    // Unlock screen
+    mir_screen.notify_locked(false);
 
     // At T=10 we request a temporary keep display on (e.g. user has touched
     // the screen)
