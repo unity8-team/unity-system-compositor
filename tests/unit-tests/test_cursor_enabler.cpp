@@ -33,6 +33,7 @@
 #include <vector>
 #include <tuple>
 #include <cstring>
+#include <chrono>
 
 namespace mev = mir::events;
 
@@ -53,19 +54,12 @@ struct TestCursorEnabler : ::testing::Test
     std::chrono::milliseconds never_remove_pointer{0};
     std::chrono::milliseconds remove_after_five_seconds_of_non_pointing_events{5000};
 
-    MirEvent *mouse_event;
-    MirEvent *touch_event;
-    MirEvent *key_event;
+    mir::EventUPtr mouse_event{ mev::make_event(MirInputDeviceId{1}, std::chrono::nanoseconds(10), mir_input_event_modifier_none, mir_pointer_action_motion, 0, 1.0f, 1.0f, 0.0f, 0.0f) };
+    mir::EventUPtr touch_event{ mev::make_event(MirInputDeviceId{2}, std::chrono::nanoseconds(6000), mir_input_event_modifier_none) };
+    mir::EventUPtr key_event{ mev::make_event(MirInputDeviceId{3}, std::chrono::nanoseconds(6000), mir_keyboard_action_up, 0, 0, mir_input_event_modifier_none) };
     TestCursorEnabler()
     {
-        // Naughty Gerry, dropping pointers!
-        mouse_event = mev::make_event(mir_input_event_type_pointer, 10, mir_input_event_modifier_none,
-                                      mir_pointer_action_motion, {}, 1, 1, 0, 0).release();
-
-        touch_event = mev::make_event(mir_input_event_type_touch, 6000, 0).release();
-        mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_unknown, 1, 1, 0, 0, 0, 0);
-
-        key_event = mev::make_event(mir_input_event_type_key, 6000, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_none).release();
+        mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_unknown, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 };
 }

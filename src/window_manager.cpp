@@ -18,23 +18,20 @@
 
 #include "window_manager.h"
 
-#include "session_switcher.h"
+#include "session_monitor.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/session.h"
-#include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/surface_specification.h"
 
 #include "mir_toolkit/client_types.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -85,41 +82,6 @@ public:
     std::shared_ptr<ms::Session> const scene_session;
     msh::FocusController& focus_controller;
 };
-
-
-struct SessionReadyObserver : ms::NullSurfaceObserver,
-                              std::enable_shared_from_this<SessionReadyObserver>
-{
-    SessionReadyObserver(
-        std::shared_ptr<usc::SessionSwitcher> const& switcher,
-        std::shared_ptr<ms::Surface> const& surface,
-        ms::Session const* session)
-        : switcher{switcher},
-          surface{surface},
-          session{session}
-    {
-    }
-
-    void frame_posted(int) override
-    {
-        ++num_frames_posted;
-        if (num_frames_posted == num_frames_for_session_ready)
-        {
-            switcher->mark_ready(session);
-            surface->remove_observer(shared_from_this());
-        }
-    }
-
-    std::shared_ptr<usc::SessionSwitcher> const switcher;
-    std::shared_ptr<ms::Surface> const surface;
-    ms::Session const* const session;
-    // We need to wait for the second frame before marking the session
-    // as ready. The first frame posted from sessions is a blank frame.
-    // TODO: Solve this issue at its root and remove this workaround
-    int const num_frames_for_session_ready{2};
-    int num_frames_posted{0};
-};
-
 }
 
 usc::WindowManager::WindowManager(
@@ -127,127 +89,49 @@ usc::WindowManager::WindowManager(
     std::shared_ptr<mir::graphics::Display> const& display,
     std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<SessionSwitcher> const& session_switcher) :
-    focus_controller{focus_controller},
+    std::shared_ptr<SessionMonitor> const& session_monitor) :
+    mir::shell::SystemCompositorWindowManager{
+        focus_controller,
+        display_layout,
+        session_coordinator},
+    session_monitor{session_monitor},
     display{display},
-    display_layout{display_layout},
-    session_coordinator{session_coordinator},
-    session_switcher{session_switcher}
+    display_layout{display_layout}
 {
 }
 
-void usc::WindowManager::add_session(std::shared_ptr<ms::Session> const& session)
+void usc::WindowManager::on_session_added(std::shared_ptr<mir::scene::Session> const& session) const
 {
     std::cerr << "Opening session " << session->name() << std::endl;
 
-    focus_controller->set_focus_to(session, {});
-
     auto const usc_session = std::make_shared<UscSession>(session, *focus_controller);
 
-    session_switcher->add(usc_session, session->process_id());
+    session_monitor->add(usc_session, session->process_id());
+    sessions.push_back(session);
 }
 
-void usc::WindowManager::remove_session(std::shared_ptr<ms::Session> const& session)
+void usc::WindowManager::on_session_removed(std::shared_ptr<mir::scene::Session> const& session) const
 {
     std::cerr << "Closing session " << session->name() << std::endl;
 
-    auto const next_session = session_coordinator->successor_of({});
-    if (next_session)
-        focus_controller->set_focus_to(next_session, next_session->default_surface());
-    else
-        focus_controller->set_focus_to(next_session, {});
+    session_monitor->remove(session);
 
-    session_switcher->remove(session);
+    sessions.erase( std::remove(begin(sessions), end(sessions), session), end(sessions));
 }
 
-auto usc::WindowManager::add_surface(
-    std::shared_ptr<ms::Session> const& session,
-    ms::SurfaceCreationParameters const& params,
-    std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
--> mf::SurfaceId
+void usc::WindowManager::on_session_ready(std::shared_ptr<mir::scene::Session> const& session) const
 {
-    mir::graphics::DisplayConfigurationOutputId const output_id_invalid{
-        mir_display_output_id_invalid};
-    auto placed_parameters = params;
-
-    mir::geometry::Rectangle rect{params.top_left, params.size};
-
-    if (params.output_id != output_id_invalid)
-    {
-        display_layout->place_in_output(params.output_id, rect);
-    }
-
-    placed_parameters.top_left = rect.top_left;
-    placed_parameters.size = rect.size;
-
-    auto const result = build(session, placed_parameters);
-    auto const surface = session->surface(result);
-
-    auto const session_ready_observer = std::make_shared<SessionReadyObserver>(
-        session_switcher, surface, session.get());
-
-    surface->add_observer(session_ready_observer);
-
-    surfaces.push_back(surface);
-
-    return result;
+    session_monitor->mark_ready(session.get());
 }
 
-void usc::WindowManager::modify_surface(
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::shared_ptr<ms::Surface> const& surface,
-    msh::SurfaceSpecification const& modifications)
-{
-    if (modifications.name.is_set())
-        surface->rename(modifications.name.value());
-}
-
-void usc::WindowManager::remove_surface(
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::weak_ptr<ms::Surface> const& surface)
-{
-    auto it = surfaces.begin();
-    for ( ; it != surfaces.end(); ) {
-        if (surface.lock() == *it) {
-            it = surfaces.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
-
-void usc::WindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
+void usc::WindowManager::add_display(mir::geometry::Rectangle const& area)
 {
     resize_scene_to_cloned_display_intersection();
 }
 
-void usc::WindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
+void usc::WindowManager::remove_display(mir::geometry::Rectangle const& area)
 {
     resize_scene_to_cloned_display_intersection();
-}
-
-bool usc::WindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
-{
-    return false;
-}
-
-bool usc::WindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
-{
-    return false;
-}
-
-bool usc::WindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
-{
-    return false;
-}
-
-int usc::WindowManager::set_surface_attribute(
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::shared_ptr<ms::Surface> const& surface,
-    MirSurfaceAttrib attrib,
-    int value)
-{
-    return surface->configure(attrib, value);
 }
 
 void usc::WindowManager::resize_scene_to_cloned_display_intersection()
@@ -273,7 +157,9 @@ void usc::WindowManager::resize_scene_to_cloned_display_intersection()
     std::cout << "Intersection" << intersection.width << intersection.height << std::endl;
 
     // Now resize all surfaces in scene to this value
-    for (auto &s : surfaces) {
-        s->resize(intersection);
-    }
+    for (auto &session : sessions)
+        for (auto s = session->default_surface(); s; s = session->surface_after(s))
+        {
+            s->resize(intersection);
+        }
 }

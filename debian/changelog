@@ -1,8 +1,47 @@
+unity-system-compositor (0.1.0+15.10.20150728.1-0ubuntu1) wily; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * Support different screen timeout values for notifications
+    (LP: #1426115)
+  * Enable and handle proximity events properly (LP: #1291455)
+  * Don't force gcc 4.9 when building the package (LP: #1478926)
+  * Introduce new versioning scheme
+
+  [ Alan Griffiths ]
+  * Port to mir SystemCompositorWindowManager
+  
+  [ Robert Ancell ]
+  * Depend on the new xmir package instead of the obsolete
+    xserver-xorg-xmir (LP: #1204505)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 28 Jul 2015 18:55:28 +0000
+
 unity-system-compositor (0.0.6) UNRELEASED; urgency=medium
 
   * Demo USC with cursor override and special clone ability
 
  -- Gerry Boland <gerry.boland@canonical.com>  Tue, 07 Jul 2015 10:50:27 +0100
+
+unity-system-compositor (0.0.5+15.10.20150722-0ubuntu1) wily; urgency=medium
+
+  [ Kevin Gunn ]
+  * Release in step with Mir 0.14 
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 22 Jul 2015 14:49:58 +0000
+
+unity-system-compositor (0.0.5+15.04.20150713-0ubuntu1) vivid; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * Don't restart the inactivity timers when receiving invalid dbus
+    calls or uninteresting dbus events
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 13 Jul 2015 14:17:04 +0000
 
 unity-system-compositor (0.0.5+15.04.20150506.1-0ubuntu1) vivid; urgency=medium
 

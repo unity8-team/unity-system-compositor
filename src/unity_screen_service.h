@@ -67,7 +67,6 @@ private:
         std::string const& new_owner);
     void dbus_emit_DisplayPowerStateChange(
         MirPowerMode power_mode, PowerStateChangeReason reason);
-    void dbus_overrideOrientation(uint32_t display_id, int32_t orientation);
 
     DBusConnectionHandle const connection;
     std::shared_ptr<usc::Screen> const screen;

@@ -26,11 +26,13 @@
 #include "powerd_mediator.h"
 #include "unity_screen_service.h"
 #include "clone_display_configuration_policy.h"
+#include "steady_clock.h"
 
 #include <mir/input/cursor_listener.h>
 #include <mir/server_status_listener.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/scene/session.h>
+#include <mir/abnormal_exit.h>
 #include <mir/main_loop.h>
 
 #include <iostream>
@@ -94,12 +96,20 @@ struct ServerStatusListener : public mir::ServerStatusListener
 
     std::shared_ptr<msh::FocusController> const focus_controller;
 };
+const char* const dm_from_fd = "from-dm-fd";
+const char* const dm_to_fd = "to-dm-fd";
+const char* const dm_stub = "debug-without-dm";
+const char* const dm_stub_active = "debug-active-session-name";
 }
 
 usc::Server::Server(int argc, char** argv)
 {
-    add_configuration_option("from-dm-fd", "File descriptor of read end of pipe from display manager [int]", mir::OptionType::integer);
-    add_configuration_option("to-dm-fd",   "File descriptor of write end of pipe to display manager [int]",  mir::OptionType::integer);
+    add_configuration_option(dm_from_fd, "File descriptor of read end of pipe from display manager [int]",
+        mir::OptionType::integer);
+    add_configuration_option(dm_to_fd, "File descriptor of write end of pipe to display manager [int]",
+        mir::OptionType::integer);
+    add_configuration_option(dm_stub, "Run without a display manager (only useful when debugging)", mir::OptionType::null);
+    add_configuration_option(dm_stub_active, "Expected connection when run without a display manager (only useful when debugging)", "nested-mir@:/run/user/1000/mir_socket");
     add_configuration_option("blacklist", "Video blacklist regex to use",  mir::OptionType::string);
     add_configuration_option("version", "Show version of Unity System Compositor",  mir::OptionType::null);
     add_configuration_option("spinner", "Path to spinner executable",  mir::OptionType::string);
@@ -111,6 +121,9 @@ usc::Server::Server(int argc, char** argv)
     add_configuration_option("power-key-ignore-timeout", "The time in milli-seconds the power key must be held to ignore - must be less than shutdown-timeout",  mir::OptionType::integer);
     add_configuration_option("disable-inactivity-policy", "Disables handling user inactivity and power key",  mir::OptionType::boolean);
     add_configuration_option("remove_pointer_timeout", "The time in milli-seconds the cursor image stays visible after touch screen is used again - by default the cursor image stays visible",  mir::OptionType::integer);
+    add_configuration_option("notification-display-off-timeout", "The time in seconds before the screen is turned off after a notification arrives",  mir::OptionType::integer);
+    add_configuration_option("notification-display-dim-timeout", "The time in seconds before the screen is dimmed after a notification arrives",  mir::OptionType::integer);
+
     set_command_line(argc, const_cast<char const **>(argv));
 
     set_command_line_handler(&ignore_unknown_arguments);
@@ -170,15 +183,49 @@ std::shared_ptr<usc::DMMessageHandler> usc::Server::the_dm_message_handler()
     return the_session_switcher();
 }
 
+namespace
+{
+struct NullDMMessageHandler : usc::DMConnection
+{
+    explicit NullDMMessageHandler(
+        std::shared_ptr<usc::DMMessageHandler> const& dm_message_handler,
+        std::string const& client_name) :
+        dm_message_handler{dm_message_handler},
+        client_name{client_name}
+    {}
+
+    ~NullDMMessageHandler() = default;
+
+    void start() override
+    {
+        dm_message_handler->set_active_session(client_name);
+    };
+
+    std::shared_ptr<usc::DMMessageHandler> const dm_message_handler;
+    std::string const client_name;
+};
+}
+
 std::shared_ptr<usc::DMConnection> usc::Server::the_dm_connection()
 {
     return dm_connection(
-        [this]
+        [this]() -> std::shared_ptr<usc::DMConnection>
         {
-            return std::make_shared<AsioDMConnection>(
-                the_options()->get("from-dm-fd", -1),
-                the_options()->get("to-dm-fd", -1),
-                the_dm_message_handler());
+            if (the_options()->is_set(dm_from_fd) && the_options()->is_set(dm_to_fd))
+            {
+                return std::make_shared<AsioDMConnection>(
+                    the_options()->get(dm_from_fd, -1),
+                    the_options()->get(dm_to_fd, -1),
+                    the_dm_message_handler());
+            }
+            else if (the_options()->is_set(dm_stub))
+            {
+                return std::make_shared<NullDMMessageHandler>(
+                    the_dm_message_handler(),
+                    the_options()->get<std::string>(dm_stub_active));
+            }
+
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit("to and from FDs are required for display manager"));
         });
 }
 
@@ -193,10 +240,14 @@ std::shared_ptr<usc::Screen> usc::Server::the_screen()
                 the_display(),
                 the_touch_visualizer(),
                 the_main_loop(),
-                the_input_region(),
+                the_clock(),
                 the_cursor(),
-                inactivity_display_off_timeout(),
-                inactivity_display_dim_timeout());
+                MirScreen::Timeouts{
+                    inactivity_display_off_timeout(),
+                    inactivity_display_dim_timeout()},
+                MirScreen::Timeouts{
+                    notification_display_off_timeout(),
+                    notification_display_dim_timeout()});
         });
 }
 
@@ -231,6 +282,15 @@ std::shared_ptr<usc::UnityScreenService> usc::Server::the_unity_screen_service()
             return std::make_shared<UnityScreenService>(
                     dbus_bus_address(),
                     the_screen());
+        });
+}
+
+std::shared_ptr<usc::Clock> usc::Server::the_clock()
+{
+    return clock(
+        [this]
+        {
+            return std::make_shared<SteadyClock>();
         });
 }
 
