@@ -138,7 +138,6 @@ usc::Server::Server(int argc, char** argv)
        {
          return std::make_shared<WindowManager>(
              focus_controller,
-             the_display(),
              the_shell_display_layout(),
              the_session_coordinator(),
              the_session_switcher());

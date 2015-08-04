@@ -20,8 +20,10 @@
 #define USC_WINDOW_MANAGER_H_
 
 #include <mir/shell/system_compositor_window_manager.h>
+#include "mir/geometry/rectangle.h"
 #include "session_monitor.h"
 #include <vector>
+#include <set>
 
 namespace mir
 {
@@ -39,7 +41,6 @@ class WindowManager : public mir::shell::SystemCompositorWindowManager
 public:
     explicit WindowManager(
         mir::shell::FocusController* focus_controller,
-        std::shared_ptr<mir::graphics::Display> const& display,
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
         std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<SessionMonitor> const& session_monitor);
@@ -57,6 +58,9 @@ private:
     virtual void on_session_added(std::shared_ptr<mir::scene::Session> const& session) const;
     virtual void on_session_removed(std::shared_ptr<mir::scene::Session> const& session) const;
     virtual void on_session_ready(std::shared_ptr<mir::scene::Session> const& session) const;
+    std::vector<mir::geometry::Rectangle> rects;
+    mir::geometry::Size surface_size;
+    std::vector<std::shared_ptr<mir::scene::Surface>> mutable surfaces;
 };
 }
 
