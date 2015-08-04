@@ -33,6 +33,7 @@
 #include "mir_toolkit/client_types.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -96,6 +97,26 @@ usc::WindowManager::WindowManager(
     session_monitor{session_monitor}
 {
 }
+
+void usc::WindowManager::add_display(mir::geometry::Rectangle const& area)
+{
+    rects.push_back(area);
+    resize_scene_to_cloned_display_intersection();
+}
+
+void usc::WindowManager::remove_display(mir::geometry::Rectangle const& area)
+{
+    for(auto it = rects.begin(); it != rects.end();)
+    {
+        if (*it == area)
+            it = rects.erase(it);
+        else
+            it++;
+    }
+
+    resize_scene_to_cloned_display_intersection();
+}
+
 void usc::WindowManager::on_session_added(std::shared_ptr<mir::scene::Session> const& session) const
 {
     std::cerr << "Opening session " << session->name() << std::endl;
@@ -103,6 +124,7 @@ void usc::WindowManager::on_session_added(std::shared_ptr<mir::scene::Session> c
     auto const usc_session = std::make_shared<UscSession>(session, *focus_controller);
 
     session_monitor->add(usc_session, session->process_id());
+    sessions.push_back(session);
 }
 
 void usc::WindowManager::on_session_removed(std::shared_ptr<mir::scene::Session> const& session) const
@@ -110,9 +132,40 @@ void usc::WindowManager::on_session_removed(std::shared_ptr<mir::scene::Session>
     std::cerr << "Closing session " << session->name() << std::endl;
 
     session_monitor->remove(session);
+
+    sessions.erase( std::remove(begin(sessions), end(sessions), session), end(sessions));
 }
 
 void usc::WindowManager::on_session_ready(std::shared_ptr<mir::scene::Session> const& session) const
 {
     session_monitor->mark_ready(session.get());
+}
+
+void usc::WindowManager::resize_scene_to_cloned_display_intersection()
+{
+    using namespace mir::geometry;
+    // Determine display intersection geometry - they should already be cloned and have
+    // orientation (i.e. both landscape)
+
+    if (rects.empty())
+        return;
+
+    auto intersection = rects.front();
+    for (auto const& rect : rects)
+        intersection = intersection.intersection_with(rect);
+
+    std::cout << "Intersection: " << intersection << std::endl;
+
+    // Now resize all surfaces in scene to this value
+    for (auto &session : sessions)
+    {
+        auto first = session->default_surface();
+        first->resize(intersection.size);
+        auto next = session->surface_after(first);
+        while (next != first)
+        {
+            next->resize(intersection.size);
+            next = session->surface_after(next);
+        }
+    }
 }
