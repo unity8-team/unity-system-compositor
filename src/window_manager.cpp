@@ -157,11 +157,14 @@ void usc::WindowManager::resize_scene_to_cloned_display_intersection()
     std::cout << "Intersection: " << intersection << std::endl;
 
     // Now resize all surfaces in scene to this value
+    // TODO: (kdub) have Mir provide an easier route for this operation
     for (auto &session : sessions)
     {
         auto first = session->default_surface();
+        if (!first) return;
         first->resize(intersection.size);
         auto next = session->surface_after(first);
+        if (!next) return;
         while (next != first)
         {
             next->resize(intersection.size);
