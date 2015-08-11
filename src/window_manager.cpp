@@ -160,8 +160,10 @@ void usc::WindowManager::resize_scene_to_cloned_display_intersection()
     for (auto &session : sessions)
     {
         auto first = session->default_surface();
+        if (!first) return;
         first->resize(intersection.size);
         auto next = session->surface_after(first);
+        if (!next) return;
         while (next != first)
         {
             next->resize(intersection.size);
