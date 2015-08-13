@@ -31,10 +31,12 @@ void CloneDisplayConfigurationPolicy::apply_to(mir::graphics::DisplayConfigurati
     wrapped->apply_to(conf);
 
     conf.for_each_output(
-                [&](mg::UserDisplayConfigurationOutput& displayConfigOutput) {
-        if (displayConfigOutput.id.as_value() > 0) { printf("Here\n");
+                [&](mg::UserDisplayConfigurationOutput& displayConfigOutput)
+    {
+        //rotate primary display
+        if (displayConfigOutput.type == mg::DisplayConfigurationOutputType::lvds)
             displayConfigOutput.orientation = mir_orientation_left;
-        }
+        //external is normal rotation
     }
     );
 
