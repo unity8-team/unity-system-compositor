@@ -74,12 +74,13 @@ public:
             PowerStateChangeHandler const& power_state_change_handler) override;
 
 private:
+    enum class ForceResetTimers { no, yes };
     void set_screen_power_mode_l(MirPowerMode mode, PowerStateChangeReason reason);
     void configure_display_l(MirPowerMode mode, PowerStateChangeReason reason);
 
     void cancel_timers_l(PowerStateChangeReason reason);
     void reset_timers_l(PowerStateChangeReason reason);
-    void reset_timers_ignoring_power_mode_l(PowerStateChangeReason reason);
+    void reset_timers_ignoring_power_mode_l(PowerStateChangeReason reason, ForceResetTimers force);
     void enable_inactivity_timers_l(bool flag);
     Timeouts timeouts_for(PowerStateChangeReason reason);
     bool is_screen_change_allowed(MirPowerMode mode, PowerStateChangeReason reason);
@@ -106,6 +107,7 @@ private:
     bool restart_timers;
     PowerStateChangeHandler power_state_change_handler;
     bool allow_proximity_to_turn_on_screen;
+    bool turned_on_by_user;
 };
 
 }
