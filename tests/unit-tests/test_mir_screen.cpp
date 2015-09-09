@@ -182,6 +182,8 @@ struct AMirScreen : testing::Test
     std::chrono::seconds const dimmer_timeout{50};
     std::chrono::seconds const notification_power_off_timeout{15};
     std::chrono::seconds const notification_dimmer_timeout{12};
+    std::chrono::seconds const call_power_off_timeout{30};
+    std::chrono::seconds const call_dimmer_timeout{25};
 
     std::chrono::seconds const five_seconds{5};
     std::chrono::seconds const ten_seconds{10};
@@ -346,7 +348,8 @@ struct AMirScreen : testing::Test
         timer,
         timer,
         {power_off_timeout, dimmer_timeout},
-        {notification_power_off_timeout, notification_dimmer_timeout}};
+        {notification_power_off_timeout, notification_dimmer_timeout},
+        {call_power_off_timeout, call_dimmer_timeout}};
 };
 
 }
@@ -923,7 +926,7 @@ TEST_F(AMirScreen, turns_screen_off_after_call_timeout)
     verify_and_clear_expectations();
 
     expect_screen_is_turned_off();
-    timer->advance_by(power_off_timeout);
+    timer->advance_by(call_power_off_timeout);
 }
 
 TEST_F(AMirScreen, keep_display_on_temporarily_overrides_call_timeout)
@@ -934,13 +937,14 @@ TEST_F(AMirScreen, keep_display_on_temporarily_overrides_call_timeout)
     receive_call();
     verify_and_clear_expectations();
 
-    // At T=50 we request a temporary keep display on (e.g. user has touched
+    // At T=20 we request a temporary keep display on (e.g. user has touched
     // the screen)
-    timer->advance_by(fifty_seconds);
+    timer->advance_by(ten_seconds);
+    timer->advance_by(ten_seconds);
     mir_screen.keep_display_on_temporarily();
 
-    // At T=60 nothing should happen since keep display on temporarily
-    // has reset the timers (so the call timeout of 60s is overriden).
+    // At T=30 nothing should happen since keep display on temporarily
+    // has reset the timers (so the call timeout is overriden).
     expect_no_reconfiguration();
     timer->advance_by(ten_seconds);
     verify_and_clear_expectations();
@@ -978,7 +982,7 @@ TEST_F(AMirScreen, cancels_proximity_handling_when_screen_is_turned_off_by_call_
     cover_screen();
 
     receive_call();
-    timer->advance_by(power_off_timeout);
+    timer->advance_by(call_power_off_timeout);
 
     verify_proximity_disabled();
 }
