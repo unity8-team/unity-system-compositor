@@ -1,3 +1,10 @@
+unity-system-compositor (0.1.2+15.10.20150911-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Introduce reasons 'call' and 'call_done' for turning on the screen
+    when a call arrives and finishes, respectively (LP: #1291455)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Fri, 11 Sep 2015 11:38:31 +0300
+
 unity-system-compositor (0.1.1+15.10.20150904-0ubuntu1) wily; urgency=medium
 
   [ Michal Sawicz ]
