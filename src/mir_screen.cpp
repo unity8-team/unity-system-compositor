@@ -148,7 +148,7 @@ void usc::MirScreen::set_screen_power_mode_l(MirPowerMode mode, PowerStateChange
     // Notifications don't turn on the screen directly, they rely on proximity events
     if (mode == MirPowerMode::mir_power_mode_on &&
         (reason == PowerStateChangeReason::notification ||
-         reason == PowerStateChangeReason::call ||
+         reason == PowerStateChangeReason::snap_decision ||
          reason == PowerStateChangeReason::call_done))
     {
         if (current_power_mode != MirPowerMode::mir_power_mode_on)
@@ -321,7 +321,7 @@ usc::MirScreen::Timeouts usc::MirScreen::timeouts_for(PowerStateChangeReason rea
     {
         return notification_timeouts;
     }
-    else if (reason == PowerStateChangeReason::call)
+    else if (reason == PowerStateChangeReason::snap_decision)
     {
         return call_timeouts;
     }

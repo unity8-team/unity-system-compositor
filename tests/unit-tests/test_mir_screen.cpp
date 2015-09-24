@@ -297,7 +297,7 @@ struct AMirScreen : testing::Test
     {
         mir_screen.set_screen_power_mode(
             MirPowerMode::mir_power_mode_on,
-            PowerStateChangeReason::call);
+            PowerStateChangeReason::snap_decision);
         process_deferred_actions();
     }
 

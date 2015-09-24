@@ -24,7 +24,7 @@ enum class PowerStateChangeReason
     power_key = 2,
     proximity = 3,
     notification = 4,
-    call = 5,
+    snap_decision = 5,
     call_done = 6
 };
 
