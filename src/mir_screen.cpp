@@ -156,6 +156,10 @@ void usc::MirScreen::set_screen_power_mode_l(MirPowerMode mode, PowerStateChange
             allow_proximity_to_turn_on_screen = true;
             screen_hardware->enable_proximity(true);
         }
+        else
+        {
+            screen_hardware->set_normal_backlight();
+        }
 
         if (reason == PowerStateChangeReason::call_done &&
             !turned_on_by_user)

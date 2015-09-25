@@ -1099,3 +1099,21 @@ TEST_F(AMirScreen,
 
     verify_proximity_disabled();
 }
+
+TEST_F(AMirScreen,
+       sets_normal_backlight_when_notification_arrives_while_screen_already_on)
+{
+    turn_screen_on();
+
+    EXPECT_CALL(*screen_hardware, set_normal_backlight());
+    receive_notification();
+}
+
+TEST_F(AMirScreen,
+       sets_normal_backlight_when_call_arrives_while_screen_already_on)
+{
+    turn_screen_on();
+
+    EXPECT_CALL(*screen_hardware, set_normal_backlight());
+    receive_call();
+}
