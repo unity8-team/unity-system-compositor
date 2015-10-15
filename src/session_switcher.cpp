@@ -18,6 +18,7 @@
 
 #include "session_switcher.h"
 #include "spinner.h"
+#include "log.h"
 
 #include <mir/frontend/session.h>
 
@@ -31,10 +32,14 @@ void usc::SessionSwitcher::add(std::shared_ptr<Session> const& session, pid_t pi
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (pid == spinner_process->pid())
-        spinner_name = session->name();
+    auto const& name = session->name();
 
-    sessions[session->name()] = SessionInfo(session);
+    log::session_switcher_add_session(name, pid);
+
+    if (pid == spinner_process->pid())
+        spinner_name = name;
+
+    sessions[name] = SessionInfo(session);
     update_displayed_sessions();
 }
 
@@ -43,6 +48,8 @@ void usc::SessionSwitcher::remove(std::shared_ptr<mir::frontend::Session> const&
     std::lock_guard<std::mutex> lock{mutex};
 
     auto const& name = session->name();
+
+    log::session_switcher_remove_session(name);
 
     auto const iter = sessions.find(name);
     if (iter == sessions.end())
@@ -171,6 +178,8 @@ void usc::SessionSwitcher::show_session(
     std::string const& name,
     ShowMode show_mode)
 {
+    log::session_switcher_show_session(name, to_string(show_mode));
+
     auto& session = sessions[name].session;
 
     if (show_mode == ShowMode::as_active)
@@ -181,12 +190,16 @@ void usc::SessionSwitcher::show_session(
 
 void usc::SessionSwitcher::hide_session(std::string const& name)
 {
+    log::session_switcher_hide_session(name);
+
     auto& session = sessions[name].session;
     session->hide();
 }
 
 void usc::SessionSwitcher::ensure_spinner_will_be_shown(ShowMode show_mode)
 {
+    log::session_switcher_show_spinner(to_string(show_mode));
+
     auto const iter = sessions.find(spinner_name);
     if (iter == sessions.end())
     {
@@ -202,5 +215,15 @@ void usc::SessionSwitcher::ensure_spinner_will_be_shown(ShowMode show_mode)
 
 void usc::SessionSwitcher::ensure_spinner_is_not_running()
 {
+    log::session_switcher_hide_spinner();
     spinner_process->kill();
+}
+
+std::string usc::SessionSwitcher::to_string(ShowMode show_mode)
+{
+    if (show_mode == ShowMode::as_next)
+        return "as_next";
+    else if (show_mode == ShowMode::as_active)
+        return "as_active";
+    return "unknown";
 }

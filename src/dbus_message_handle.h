@@ -21,14 +21,21 @@
 
 #include <dbus/dbus.h>
 #include <cstdarg>
+#include <functional>
 
 namespace usc
 {
 
+struct UnownedDBusMessage
+{
+    DBusMessage* message;
+};
+
 class DBusMessageHandle
 {
 public:
-    DBusMessageHandle(DBusMessage* message);
+    explicit DBusMessageHandle(DBusMessage* message);
+    explicit DBusMessageHandle(UnownedDBusMessage message);
     DBusMessageHandle(DBusMessage* message, int first_arg_type, ...);
     DBusMessageHandle(DBusMessage* message, int first_arg_type, va_list args);
     DBusMessageHandle(DBusMessageHandle&&) noexcept;
@@ -37,10 +44,13 @@ public:
     operator ::DBusMessage*() const;
     operator bool() const;
 
+    void for_each_argument(std::function<void(int,void*)> const& func) const;
+
 private:
     DBusMessageHandle(DBusMessageHandle const&) = delete;
     DBusMessageHandle& operator=(DBusMessageHandle const&) = delete;
     ::DBusMessage* message;
+    bool owned;
 };
 
 }

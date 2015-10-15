@@ -30,6 +30,7 @@
 #include "dbus_connection_thread.h"
 #include "display_configuration_policy.h"
 #include "steady_clock.h"
+#include "log.h"
 
 #include <mir/input/cursor_listener.h>
 #include <mir/server_status_listener.h>
@@ -50,10 +51,7 @@ namespace
 // FIXME For reasons that are not currently clear lightdm sometimes passes "--vt" on android
 void ignore_unknown_arguments(int argc, char const* const* argv)
 {
-    std::cout << "Warning: ignoring unrecognised arguments:";
-    for (auto arg = argv; arg != argv+argc; ++arg)
-        std::cout << " " << *arg;
-    std::cout << std::endl;
+    usc::log::server_invalid_arguments(argc, argv);
 }
 
 struct NullCursorListener : public mi::CursorListener
@@ -73,7 +71,7 @@ struct ServerStatusListener : public mir::ServerStatusListener
 
     void paused() override
     {
-        std::cerr << "pause" << std::endl;
+        usc::log::server_pause();
 
         if (auto active_session = weak_active_session().lock())
             active_session->set_lifecycle_state(mir_lifecycle_state_will_suspend);
@@ -81,7 +79,7 @@ struct ServerStatusListener : public mir::ServerStatusListener
 
     void resumed() override
     {
-        std::cerr << "resume" << std::endl;
+        usc::log::server_resume();
 
         if (auto active_session = weak_active_session().lock())
             active_session->set_lifecycle_state(mir_lifecycle_state_resumed);

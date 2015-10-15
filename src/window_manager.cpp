@@ -98,8 +98,6 @@ usc::WindowManager::WindowManager(
 }
 void usc::WindowManager::on_session_added(std::shared_ptr<mir::scene::Session> const& session) const
 {
-    std::cerr << "Opening session " << session->name() << std::endl;
-
     auto const usc_session = std::make_shared<UscSession>(session, *focus_controller);
 
     session_monitor->add(usc_session, session->process_id());
@@ -107,8 +105,6 @@ void usc::WindowManager::on_session_added(std::shared_ptr<mir::scene::Session> c
 
 void usc::WindowManager::on_session_removed(std::shared_ptr<mir::scene::Session> const& session) const
 {
-    std::cerr << "Closing session " << session->name() << std::endl;
-
     session_monitor->remove(session);
 }
 

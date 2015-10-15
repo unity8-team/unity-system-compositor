@@ -30,6 +30,9 @@
 #include <regex.h>
 #include <GLES2/gl2.h>
 
+#define MIR_LOG_COMPONENT "usc::SystemCompositor"
+#include <mir/log.h>
+
 namespace
 {
 
@@ -42,7 +45,7 @@ bool check_blacklist(
     if (blacklist.empty())
         return true;
 
-    std::cerr << "Using blacklist \"" << blacklist << "\"" << std::endl;
+    mir::log_info("Using blacklist \"%s\"", blacklist.c_str());
 
     regex_t re;
     auto result = regcomp (&re, blacklist.c_str(), REG_EXTENDED);
@@ -64,7 +67,7 @@ bool check_blacklist(
     {
         char error_string[1024];
         regerror (result, &re, error_string, 1024);
-        std::cerr << "Failed to compile blacklist regex: " << error_string << std::endl;
+        mir::log_info("Failed to compile blacklist regex: %s", error_string);
     }
 
     return true;
@@ -83,7 +86,7 @@ void usc::SystemCompositor::run()
 {
     if (server->show_version())
     {
-        std::cerr << "unity-system-compositor " << USC_VERSION << std::endl;
+        mir::log_info("unity-system-compositor %s", USC_VERSION);
         return;
     }
 
@@ -93,9 +96,9 @@ void usc::SystemCompositor::run()
             auto renderer = (char *) glGetString (GL_RENDERER);
             auto version = (char *) glGetString (GL_VERSION);
 
-            std::cerr << "GL_VENDOR = " << vendor << std::endl;
-            std::cerr << "GL_RENDERER = " << renderer << std::endl;
-            std::cerr << "GL_VERSION = " << version << std::endl;
+            mir::log_info("GL_VENDOR = %s", vendor);
+            mir::log_info("GL_RENDERER = %s", renderer);
+            mir::log_info("GL_VERSION = %s", version);
 
             if (!check_blacklist(server->blacklist(), vendor, renderer, version))
             {
@@ -109,7 +112,10 @@ void usc::SystemCompositor::run()
             // about race condition, since we are adding permissions, not restricting
             // them.
             if (server->public_socket() && chmod(server->get_socket_file().c_str(), 0777) == -1)
-                std::cerr << "Unable to chmod socket file " << server->get_socket_file() << ": " << strerror(errno) << std::endl;
+            {
+                mir::log_warning("Unable to chmod socket file %s: %s",
+                                 server->get_socket_file().c_str(), strerror(errno));
+            }
 
             dm_connection->start();
 

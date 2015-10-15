@@ -22,12 +22,17 @@
 #include <boost/throw_exception.hpp>
 
 usc::DBusMessageHandle::DBusMessageHandle(DBusMessage* message)
-    : message{message}
+    : message{message}, owned{true}
+{
+}
+
+usc::DBusMessageHandle::DBusMessageHandle(UnownedDBusMessage message)
+    : message{message.message}, owned{false}
 {
 }
 
 usc::DBusMessageHandle::DBusMessageHandle(::DBusMessage* message, int first_arg_type, ...)
-    : message{message}
+    : DBusMessageHandle{message}
 {
     if (!message)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid dbus message"));
@@ -47,7 +52,7 @@ usc::DBusMessageHandle::DBusMessageHandle(::DBusMessage* message, int first_arg_
 
 usc::DBusMessageHandle::DBusMessageHandle(
     ::DBusMessage* message, int first_arg_type, va_list args)
-    : message{message}
+    : DBusMessageHandle{message}
 {
     if (!message)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid dbus message"));
@@ -61,14 +66,14 @@ usc::DBusMessageHandle::DBusMessageHandle(
 }
 
 usc::DBusMessageHandle::DBusMessageHandle(DBusMessageHandle&& other) noexcept
-    : message{other.message}
+    : message{other.message}, owned{other.owned}
 {
     other.message = nullptr;
 }
 
 usc::DBusMessageHandle::~DBusMessageHandle()
 {
-    if (message)
+    if (message && owned)
         dbus_message_unref(message);
 }
 
@@ -80,4 +85,37 @@ usc::DBusMessageHandle::operator ::DBusMessage*() const
 usc::DBusMessageHandle::operator bool() const
 {
     return message != nullptr;
+}
+
+void usc::DBusMessageHandle::for_each_argument(std::function<void(int,void*)> const& func) const
+{
+    if (!message) return;
+
+    DBusMessageIter iter;
+    int arg_type = DBUS_TYPE_INVALID;
+
+    dbus_message_iter_init(message, &iter);
+    while ((arg_type = dbus_message_iter_get_arg_type(&iter)) != DBUS_TYPE_INVALID)
+    {
+        if (arg_type == DBUS_TYPE_STRING)
+        {
+            char* arg{nullptr};
+            dbus_message_iter_get_basic(&iter, &arg);
+            func(arg_type, &arg);
+        }
+        else if (arg_type == DBUS_TYPE_INT32)
+        {
+            int32_t arg{0};
+            dbus_message_iter_get_basic(&iter, &arg);
+            func(arg_type, &arg);
+        }
+        else if (arg_type == DBUS_TYPE_BOOLEAN)
+        {
+            dbus_bool_t arg{FALSE};
+            dbus_message_iter_get_basic(&iter, &arg);
+            func(arg_type, &arg);
+        }
+
+        dbus_message_iter_next(&iter);
+    }
 }

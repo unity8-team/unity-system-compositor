@@ -54,6 +54,7 @@ private:
     void hide_session(std::string const& name);
     void ensure_spinner_will_be_shown(ShowMode show_mode);
     void ensure_spinner_is_not_running();
+    std::string to_string(ShowMode show_mode);
 
     struct SessionInfo
     {

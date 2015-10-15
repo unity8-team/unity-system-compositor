@@ -29,6 +29,7 @@
 #include "screen_hardware.h"
 #include "power_state_change_reason.h"
 #include "server.h"
+#include "log.h"
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -394,12 +395,14 @@ bool usc::MirScreen::is_screen_change_allowed(MirPowerMode mode, PowerStateChang
 
 void usc::MirScreen::power_off_alarm_notification()
 {
+    log::screen_power_off_alarm();
     configure_display_l(MirPowerMode::mir_power_mode_off, PowerStateChangeReason::inactivity);
     next_power_off = {};
 }
 
 void usc::MirScreen::dimmer_alarm_notification()
 {
+    log::screen_dim_alarm();
     if (current_power_mode != MirPowerMode::mir_power_mode_off)
         screen_hardware->set_dim_backlight();
     next_dimming = {};

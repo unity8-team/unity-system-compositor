@@ -17,6 +17,7 @@
 #include "screen_event_handler.h"
 #include "screen.h"
 #include "power_state_change_reason.h"
+#include "log.h"
 
 #include <mir/time/alarm_factory.h>
 #include <mir_toolkit/events/input/input_event.h>
@@ -79,6 +80,8 @@ void usc::ScreenEventHandler::power_key_down()
 {
     std::lock_guard<std::mutex> lock{guard};
 
+    log::power_key_press();
+    
     mode_at_press_start = screen->get_screen_power_mode();
     if (mode_at_press_start != MirPowerMode::mir_power_mode_on)
     {
@@ -95,6 +98,9 @@ void usc::ScreenEventHandler::power_key_down()
 void usc::ScreenEventHandler::power_key_up()
 {
     std::lock_guard<std::mutex> lock{guard};
+
+    log::power_key_release();
+
     shutdown_alarm->cancel();
     long_press_alarm->cancel();
 
@@ -114,6 +120,7 @@ void usc::ScreenEventHandler::power_key_up()
 
 void usc::ScreenEventHandler::shutdown_alarm_notification()
 {
+    log::power_key_shutdown();
     screen->set_screen_power_mode(
         MirPowerMode::mir_power_mode_off, PowerStateChangeReason::power_key);
     shutdown();
@@ -121,6 +128,7 @@ void usc::ScreenEventHandler::shutdown_alarm_notification()
 
 void usc::ScreenEventHandler::long_press_notification()
 {
+    log::power_key_long_press();
     // We know the screen is already on after power_key_down(), but we turn the
     // screen on here to ensure that it is also at full brightness for the
     // presumed system power dialog that will appear.

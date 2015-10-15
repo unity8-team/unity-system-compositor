@@ -19,9 +19,11 @@
 #include "scoped_dbus_error.h"
 
 #include "dbus_message_handle.h"
+#include "log.h"
 
 #include <future>
 #include <cstdint>
+#include <sstream>
 
 namespace
 {
@@ -470,6 +472,8 @@ usc::DBusMessageHandle usc::PowerdMediator::invoke_with_reply(
     auto msg = make_powerd_method_call_message(method, first_arg_type, args);
     va_end(args);
 
+    log::powerd_method_invocation(msg);
+
     std::promise<DBusMessage*> reply_promise;
     auto reply_future = reply_promise.get_future();
 
@@ -489,5 +493,8 @@ usc::DBusMessageHandle usc::PowerdMediator::invoke_with_reply(
     else
         dbus_event_loop.enqueue(send_message_with_reply);
 
-    return usc::DBusMessageHandle{reply_future.get()};
+    auto reply = usc::DBusMessageHandle{reply_future.get()};
+    log::powerd_method_reply(method, reply);
+
+    return std::move(reply);
 }

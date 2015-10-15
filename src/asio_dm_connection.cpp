@@ -18,6 +18,7 @@
  */
 
 #include "asio_dm_connection.h"
+#include "log.h"
 
 #include <iostream>
 #include <thread>
@@ -43,7 +44,7 @@ usc::AsioDMConnection::~AsioDMConnection()
 
 void usc::AsioDMConnection::start()
 {
-    std::cerr << "dm_connection_start" << std::endl;
+    log::dm_connection_start();
 
     send_ready();
     read_header();
@@ -82,7 +83,9 @@ void usc::AsioDMConnection::on_read_header(bs::error_code const& ec)
                                  std::placeholders::_1));
     }
     else
-        std::cerr << "Failed to read header" << std::endl;
+    {
+        log::dm_message_header_read_failure();
+    }
 }
 
 void usc::AsioDMConnection::on_read_payload(const bs::error_code& ec)
@@ -96,13 +99,13 @@ void usc::AsioDMConnection::on_read_payload(const bs::error_code& ec)
         {
         case USCMessageID::ping:
         {
-            std::cerr << "ping" << std::endl;
+            log::dm_ping_message();
             send(USCMessageID::pong, "");
             break;
         }
         case USCMessageID::pong:
         {
-            std::cerr << "pong" << std::endl;
+            log::dm_pong_message();
             break;
         }
         case USCMessageID::set_active_session:
@@ -110,7 +113,7 @@ void usc::AsioDMConnection::on_read_payload(const bs::error_code& ec)
             std::ostringstream ss;
             ss << &message_payload_buffer;
             auto client_name = ss.str();
-            std::cerr << "set_active_session '" << client_name << "'" << std::endl;
+            log::dm_set_active_session_message(client_name);
             dm_message_handler->set_active_session(client_name);
             break;
         }
@@ -119,17 +122,19 @@ void usc::AsioDMConnection::on_read_payload(const bs::error_code& ec)
             std::ostringstream ss;
             ss << &message_payload_buffer;
             auto client_name = ss.str();
-            std::cerr << "set_next_session '" << client_name << "'" << std::endl;
+            log::dm_set_next_session_message(client_name);
             dm_message_handler->set_next_session(client_name);
             break;
         }
         default:
-            std::cerr << "Ignoring unknown message " << (uint16_t) message_id << " with " << payload_length << " octets" << std::endl;
+            log::dm_unknown_message(static_cast<int>(message_id), payload_length);
             break;
         }
     }
     else
-        std::cerr << "Failed to read payload" << std::endl;
+    {
+        log::dm_message_payload_read_failure();
+    }
 
     read_header();
 }
