@@ -31,8 +31,7 @@
 #include "unity_input_service.h"
 #include "dbus_connection_thread.h"
 #include "dbus_event_loop.h"
-#include "hw_performance_booster.h"
-#include "null_performance_booster.h"
+#include "performance_booster.h"
 #include "display_configuration_policy.h"
 #include "steady_clock.h"
 
