@@ -40,13 +40,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "wallpaper.h"
+#include "wallpaper_tall.h"
+#include "wallpaper_wide.h"
 #include "logo.h"
 #include "white_dot.h"
 #include "orange_dot.h"
 
 enum TextureIds {
-    WALLPAPER = 0,
+    WALLPAPER_TALL = 0,
+    WALLPAPER_WIDE,
     LOGO,
     WHITE_DOT,
     ORANGE_DOT,
@@ -320,7 +322,8 @@ try
         -0.5f,  0.5f,
     };
 
-    prog[WALLPAPER] = createShaderProgram(vShaderSrcPlain, fShaderSrcPlain);
+    prog[WALLPAPER_TALL] = createShaderProgram(vShaderSrcPlain, fShaderSrcPlain);
+    prog[WALLPAPER_WIDE] = createShaderProgram(vShaderSrcPlain, fShaderSrcPlain);
     prog[LOGO] = createShaderProgram(vShaderSrcPlain, fShaderSrcPlain);
     prog[WHITE_DOT] = createShaderProgram(vShaderSrcPlain, fShaderSrcPlain);
 
@@ -330,11 +333,17 @@ try
     glBlendEquation(GL_FUNC_ADD);
 
     // get locations of shader-attributes/uniforms
-    vpos[WALLPAPER]         = glGetAttribLocation(prog[WALLPAPER],  "aPosition");
-    aTexCoords[WALLPAPER]   = glGetAttribLocation(prog[WALLPAPER],  "aTexCoords");
-    sampler[WALLPAPER]      = glGetUniformLocation(prog[WALLPAPER], "uSampler");
-    offset[WALLPAPER]       = glGetUniformLocation(prog[WALLPAPER], "uOffset");
-    projMat[WALLPAPER]      = glGetUniformLocation(prog[WALLPAPER], "uProjMat");
+    vpos[WALLPAPER_TALL]         = glGetAttribLocation(prog[WALLPAPER_TALL],  "aPosition");
+    aTexCoords[WALLPAPER_TALL]   = glGetAttribLocation(prog[WALLPAPER_TALL],  "aTexCoords");
+    sampler[WALLPAPER_TALL]      = glGetUniformLocation(prog[WALLPAPER_TALL], "uSampler");
+    offset[WALLPAPER_TALL]       = glGetUniformLocation(prog[WALLPAPER_TALL], "uOffset");
+    projMat[WALLPAPER_TALL]      = glGetUniformLocation(prog[WALLPAPER_TALL], "uProjMat");
+
+    vpos[WALLPAPER_WIDE]         = glGetAttribLocation(prog[WALLPAPER_WIDE],  "aPosition");
+    aTexCoords[WALLPAPER_WIDE]   = glGetAttribLocation(prog[WALLPAPER_WIDE],  "aTexCoords");
+    sampler[WALLPAPER_WIDE]      = glGetUniformLocation(prog[WALLPAPER_WIDE], "uSampler");
+    offset[WALLPAPER_WIDE]       = glGetUniformLocation(prog[WALLPAPER_WIDE], "uOffset");
+    projMat[WALLPAPER_WIDE]      = glGetUniformLocation(prog[WALLPAPER_WIDE], "uProjMat");
 
     vpos[LOGO]         = glGetAttribLocation(prog[LOGO],  "aPosition");
     aTexCoords[LOGO]   = glGetAttribLocation(prog[LOGO],  "aTexCoords");
@@ -351,15 +360,19 @@ try
     // create and upload spinner-artwork
     // note that the embedded image data has pre-multiplied alpha
     glGenTextures(MAX_TEXTURES, texture);
-    uploadTexture(texture[WALLPAPER], wallpaper);
+    uploadTexture(texture[WALLPAPER_TALL], wallpaper_tall);
+    uploadTexture(texture[WALLPAPER_WIDE], wallpaper_wide);
     uploadTexture(texture[LOGO], logo);
     uploadTexture(texture[WHITE_DOT], white_dot);
     uploadTexture(texture[ORANGE_DOT], orange_dot);
 
     // bunch of shader-attributes to enable
-    glVertexAttribPointer(aTexCoords[WALLPAPER], 2, GL_FLOAT, GL_FALSE, 0, texCoords);
-    glEnableVertexAttribArray(vpos[WALLPAPER]);
-    glEnableVertexAttribArray(aTexCoords[WALLPAPER]);
+    glVertexAttribPointer(aTexCoords[WALLPAPER_TALL], 2, GL_FLOAT, GL_FALSE, 0, texCoords);
+    glEnableVertexAttribArray(vpos[WALLPAPER_TALL]);
+    glEnableVertexAttribArray(aTexCoords[WALLPAPER_TALL]);
+    glVertexAttribPointer(aTexCoords[WALLPAPER_WIDE], 2, GL_FLOAT, GL_FALSE, 0, texCoords);
+    glEnableVertexAttribArray(vpos[WALLPAPER_WIDE]);
+    glEnableVertexAttribArray(aTexCoords[WALLPAPER_WIDE]);
     glVertexAttribPointer(aTexCoords[LOGO], 2, GL_FLOAT, GL_FALSE, 0, texCoords);
     glEnableVertexAttribArray(vpos[LOGO]);
     glEnableVertexAttribArray(aTexCoords[LOGO]);
@@ -387,6 +400,16 @@ try
         for (auto const& surface : surfaces)
             surface->paint([&](unsigned int width, unsigned int height)
             {
+                int wallpaper;
+                if (native_orientation == "landscape")
+                    wallpaper = WALLPAPER_WIDE;
+                else if (native_orientation == "portrait")
+                    wallpaper = WALLPAPER_TALL;
+                else if (width > height)
+                    wallpaper = WALLPAPER_WIDE;
+                else
+                    wallpaper = WALLPAPER_TALL;
+
                 bool const needs_rotation =
                     (width < height && native_orientation == "landscape") ||
                     (width > height && native_orientation == "portrait");
@@ -439,12 +462,12 @@ try
                 glClear(GL_COLOR_BUFFER_BIT);
 
                 // draw wallpaper backdrop
-                glVertexAttribPointer(vpos[WALLPAPER], 2, GL_FLOAT, GL_FALSE, 0, fullscreen);
-                glUseProgram(prog[WALLPAPER]);
-                glBindTexture(GL_TEXTURE_2D, texture[WALLPAPER]);
-                glUniform1i(sampler[WALLPAPER], 0);
-                glUniform2f(offset[WALLPAPER], 0.0f, 0.0f);
-                glUniformMatrix4fv(projMat[WALLPAPER], 1, GL_FALSE, glm::value_ptr(mvpMatrix));
+                glVertexAttribPointer(vpos[wallpaper], 2, GL_FLOAT, GL_FALSE, 0, fullscreen);
+                glUseProgram(prog[wallpaper]);
+                glBindTexture(GL_TEXTURE_2D, texture[wallpaper]);
+                glUniform1i(sampler[wallpaper], 0);
+                glUniform2f(offset[wallpaper], 0.0f, 0.0f);
+                glUniformMatrix4fv(projMat[wallpaper], 1, GL_FALSE, glm::value_ptr(mvpMatrix));
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
                 // draw logo

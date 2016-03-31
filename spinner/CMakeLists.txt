@@ -23,9 +23,15 @@ function(png2header png header varname)
 endfunction()
 
 png2header(
-  ${CMAKE_CURRENT_SOURCE_DIR}/wallpaper.png
-  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper.h
-  wallpaper
+  ${CMAKE_CURRENT_SOURCE_DIR}/wallpaper-tall.png
+  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper_tall.h
+  wallpaper_tall
+)
+
+png2header(
+  ${CMAKE_CURRENT_SOURCE_DIR}/wallpaper-wide.png
+  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper_wide.h
+  wallpaper_wide
 )
 
 png2header(
@@ -66,7 +72,8 @@ add_executable(unity-system-compositor-spinner
   eglspinner.cpp
   miregl.h
   miregl.cpp
-  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper.h
+  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper_tall.h
+  ${CMAKE_CURRENT_BINARY_DIR}/wallpaper_wide.h
   ${CMAKE_CURRENT_BINARY_DIR}/logo.h
   ${CMAKE_CURRENT_BINARY_DIR}/white_dot.h
   ${CMAKE_CURRENT_BINARY_DIR}/orange_dot.h
