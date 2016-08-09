@@ -1,8 +1,32 @@
-unity-system-compositor (0.6.0-0ubuntu1) yakkety; urgency=medium
+unity-system-compositor (0.6.0-0ubuntu4) UNRELEASED; urgency=medium
 
-  * Update for compatibility with repowerd.
+  * compatibility fixes for mir 0.24 release 
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 09 Jun 2016 11:34:40 +0300
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 09 Aug 2016 14:05:30 -0400
+
+unity-system-compositor (0.6.0-0ubuntu3) yakkety; urgency=medium
+
+  * No-change rebuild.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Fri, 05 Aug 2016 13:15:36 +0300
+
+unity-system-compositor (0.6.0+16.10.20160609-0ubuntu2) yakkety; urgency=medium
+
+  * No-change rebuild for boost soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 04 Aug 2016 08:33:29 +0000
+
+unity-system-compositor (0.6.0+16.10.20160609-0ubuntu1) yakkety; urgency=medium
+
+  * 0.6.0 release
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 09 Jun 2016 09:05:15 +0000
+
+unity-system-compositor (0.6.0-0ubuntu1) xenial; urgency=medium
+
+  * Grand repowerd update.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 01 Jun 2016 19:39:14 +0000
 
 unity-system-compositor (0.5.1+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
@@ -10,6 +34,12 @@ unity-system-compositor (0.5.1+16.10.20160602.1-0ubuntu1) yakkety; urgency=mediu
   * rebuild for mir 0.23
 
  -- Kevin DuBois <kdub432@gmail.com>  Thu, 02 Jun 2016 17:53:14 +0000
+
+unity-system-compositor (0.5.1+16.04.20160428-0ubuntu2) yakkety; urgency=medium
+
+  * No-change rebuild of latest xenial trunk against current archive.
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Thu, 19 May 2016 21:02:28 +0200
 
 unity-system-compositor (0.5.1+16.04.20160428-0ubuntu1) xenial; urgency=medium
 
