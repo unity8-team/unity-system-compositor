@@ -17,9 +17,9 @@ Build-Depends: cmake,
                libmirclient-dev (>= 0.24.0),
                libmirserver-dev (>= 0.24.0),
                pkg-config,
-               python:any (>= 2.7),
+               python (>= 2.7),
                python-setuptools,
-               python-pil:native,
+               python-pil,
 Standards-Version: 3.9.7
 Homepage: https://launchpad.net/unity-system-compositor
 # if you don't have have commit access to this branch but would like to upload
