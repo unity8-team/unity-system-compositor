@@ -1,8 +1,8 @@
-unity-system-compositor (0.6.0-0ubuntu2) UNRELEASED; urgency=medium
+unity-system-compositor (0.6.0+16.10.20160914-0ubuntu1) yakkety; urgency=medium
 
   * changes for mir test silo
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Wed, 14 Sep 2016 13:51:09 +0200
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Wed, 14 Sep 2016 11:59:52 +0000
 
 unity-system-compositor (0.6.0-0ubuntu1) yakkety; urgency=medium
 
