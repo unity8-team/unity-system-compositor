@@ -201,6 +201,9 @@ usc::Server::Server(int argc, char** argv)
         return std::make_unique<StubCookieAuthority>();
     });
 
+    override_the_display_configuration_report(
+        [&] { return the_display_configuration_report(); });
+
     set_config_filename("unity-system-compositor.conf");
 
     apply_settings();
@@ -224,6 +227,17 @@ std::shared_ptr<usc::SessionSwitcher> usc::Server::the_session_switcher()
         {
             return std::make_shared<SessionSwitcher>(
                 the_spinner());
+        });
+}
+
+std::shared_ptr<usc::MirScreen> usc::Server::the_mir_screen()
+{
+    return mir_screen(
+        [this]
+        {
+            return std::make_shared<MirScreen>(
+                the_compositor(),
+                the_display());
         });
 }
 
@@ -289,13 +303,13 @@ std::shared_ptr<usc::InputConfiguration> usc::Server::the_input_configuration()
 
 std::shared_ptr<usc::Screen> usc::Server::the_screen()
 {
-    return screen(
-        [this]
-        {
-            return std::make_shared<MirScreen>(
-                the_compositor(),
-                the_display());
-        });
+    return the_mir_screen();
+}
+
+std::shared_ptr<mir::graphics::DisplayConfigurationReport>
+usc::Server::the_display_configuration_report()
+{
+    return the_mir_screen();
 }
 
 std::shared_ptr<mi::EventFilter> usc::Server::the_screen_event_handler()

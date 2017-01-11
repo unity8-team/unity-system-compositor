@@ -17,6 +17,7 @@
 #ifndef USC_MIR_SCREEN_H_
 #define USC_MIR_SCREEN_H_
 
+#include <mir/graphics/display_configuration_report.h>
 #include "screen.h"
 
 #include <chrono>
@@ -32,15 +33,21 @@ namespace graphics {class Display;}
 namespace usc
 {
 
-class MirScreen: public Screen
+class MirScreen: public Screen, public mir::graphics::DisplayConfigurationReport
 {
 public:
     MirScreen(std::shared_ptr<mir::compositor::Compositor> const& compositor,
               std::shared_ptr<mir::graphics::Display> const& display);
     ~MirScreen();
 
-    void turn_on();
-    void turn_off();
+    // From Screen
+    void turn_on() override;
+    void turn_off() override;
+    void register_active_outputs_handler(ActiveOutputsHandler const& handler) override;
+
+    // From DisplayConfigurationReport
+    void initial_configuration(mir::graphics::DisplayConfiguration const& display_configuration) override;
+    void new_configuration(mir::graphics::DisplayConfiguration const& display_configuration) override;
 
 private:
     void set_power_mode(MirPowerMode mode);
@@ -49,6 +56,10 @@ private:
     std::shared_ptr<mir::graphics::Display> const display;
 
     MirPowerMode current_power_mode;
+
+    std::mutex active_outputs_mutex;
+    ActiveOutputsHandler active_outputs_handler;
+    ActiveOutputs active_outputs;
 };
 
 }

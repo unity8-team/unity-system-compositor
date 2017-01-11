@@ -45,6 +45,17 @@ usc::UnityDisplayService::UnityDisplayService(
     loop->add_connection(connection);
     connection->request_name(dbus_display_service_name);
     connection->add_filter(handle_dbus_message_thunk, this);
+
+    screen->register_active_outputs_handler(
+        [this] (ActiveOutputs const& active_outputs)
+        {
+            dbus_emit_ActiveOutputs(active_outputs);
+        });
+}
+
+usc::UnityDisplayService::~UnityDisplayService()
+{
+    screen->register_active_outputs_handler([](ActiveOutputs const&){});
 }
 
 ::DBusHandlerResult usc::UnityDisplayService::handle_dbus_message_thunk(
@@ -109,4 +120,19 @@ void usc::UnityDisplayService::dbus_TurnOn()
 void usc::UnityDisplayService::dbus_TurnOff()
 {
     screen->turn_off();
+}
+
+void usc::UnityDisplayService::dbus_emit_ActiveOutputs(ActiveOutputs const& active_outputs)
+{
+    DBusMessageHandle signal{
+        dbus_message_new_signal(
+            dbus_display_path,
+            dbus_display_interface,
+            "ActiveOutputs"),
+        DBUS_TYPE_INT32, &active_outputs.internal,
+        DBUS_TYPE_INT32, &active_outputs.external,
+        DBUS_TYPE_INVALID};
+
+    dbus_connection_send(*connection, signal, nullptr);
+    dbus_connection_flush(*connection);
 }

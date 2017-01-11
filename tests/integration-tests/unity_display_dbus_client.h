@@ -36,6 +36,8 @@ public:
     DBusAsyncReplyVoid request_turn_off();
     DBusAsyncReply request_invalid_method();
 
+    DBusMessageHandle listen_for_num_active_outputs_signal();
+
     char const* const unity_display_interface = "com.canonical.Unity.Display";
 };
 

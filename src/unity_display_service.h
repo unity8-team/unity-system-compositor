@@ -27,6 +27,7 @@ namespace usc
 {
 class Screen;
 class DBusEventLoop;
+struct ActiveOutputs;
 
 class UnityDisplayService
 {
@@ -35,6 +36,7 @@ public:
         std::shared_ptr<usc::DBusEventLoop> const& loop,
         std::string const& address,
         std::shared_ptr<usc::Screen> const& screen);
+    ~UnityDisplayService();
 
 private:
     static ::DBusHandlerResult handle_dbus_message_thunk(
@@ -44,6 +46,7 @@ private:
 
     void dbus_TurnOn();
     void dbus_TurnOff();
+    void dbus_emit_ActiveOutputs(ActiveOutputs const& active_outputs);
 
     std::shared_ptr<usc::Screen> const screen;
     std::shared_ptr<DBusEventLoop> const loop;

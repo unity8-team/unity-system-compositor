@@ -40,6 +40,7 @@ class SessionSwitcher;
 class DMMessageHandler;
 class DMConnection;
 class Screen;
+class MirScreen;
 class UnityDisplayService;
 class PowerButtonEventSink;
 class UserActivityEventSink;
@@ -61,11 +62,13 @@ public:
     using mir::Server::the_display;
     using mir::Server::the_compositor;
     using mir::Server::the_touch_visualizer;
+    using mir::Server::override_the_display_configuration_report;
 
     virtual std::shared_ptr<Spinner> the_spinner();
     virtual std::shared_ptr<DMMessageHandler> the_dm_message_handler();
     virtual std::shared_ptr<DMConnection> the_dm_connection();
     virtual std::shared_ptr<Screen> the_screen();
+    virtual std::shared_ptr<mir::graphics::DisplayConfigurationReport> the_display_configuration_report();
     virtual std::shared_ptr<InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<mir::input::EventFilter> the_screen_event_handler();
     virtual std::shared_ptr<UnityDisplayService> the_unity_display_service();
@@ -117,12 +120,13 @@ private:
     }
 
     virtual std::shared_ptr<SessionSwitcher> the_session_switcher();
+    virtual std::shared_ptr<MirScreen> the_mir_screen();
     std::string dbus_bus_address();
 
     mir::CachedPtr<Spinner> spinner;
     mir::CachedPtr<DMConnection> dm_connection;
     mir::CachedPtr<SessionSwitcher> session_switcher;
-    mir::CachedPtr<Screen> screen;
+    mir::CachedPtr<MirScreen> mir_screen;
     mir::CachedPtr<InputConfiguration> input_configuration;
     mir::CachedPtr<mir::input::EventFilter> screen_event_handler;
     mir::CachedPtr<DBusConnectionThread> dbus_thread;

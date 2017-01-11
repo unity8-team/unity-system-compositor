@@ -5,6 +5,10 @@
     </method>
     <method name='TurnOff'>
     </method>
+    <signal name='ActiveOutputs'>
+      <arg name='internal' type='d' direction='in'/>
+      <arg name='external' type='d' direction='in'/>
+    </method>
   </interface>
 </node>
 

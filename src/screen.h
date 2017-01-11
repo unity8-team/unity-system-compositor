@@ -23,6 +23,19 @@
 namespace usc
 {
 
+struct ActiveOutputs
+{
+    int internal = 0;
+    int external = 0;
+    bool operator==(ActiveOutputs const& other) const
+    {
+        return internal == other.internal &&
+               external == other.external;
+    }
+};
+
+using ActiveOutputsHandler = std::function<void(ActiveOutputs const&)>;
+
 class Screen
 {
 public:
@@ -30,6 +43,8 @@ public:
 
     virtual void turn_on() = 0;
     virtual void turn_off() = 0;
+    virtual void register_active_outputs_handler(
+        ActiveOutputsHandler const& handler) = 0;
 
 protected:
     Screen() = default;

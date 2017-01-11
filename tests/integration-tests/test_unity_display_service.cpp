@@ -40,16 +40,34 @@ namespace ut = usc::test;
 namespace
 {
 
+struct FakeScreen : ut::MockScreen
+{
+    void register_active_outputs_handler(usc::ActiveOutputsHandler const& handler)
+    {
+        std::lock_guard<std::mutex> lock{active_outputs_mutex};
+        active_outputs_handler = handler;
+    }
+
+    void notify_active_outputs(usc::ActiveOutputs const& active_outputs)
+    {
+        std::lock_guard<std::mutex> lock{active_outputs_mutex};
+        active_outputs_handler(active_outputs);
+    }
+
+    std::mutex active_outputs_mutex;
+    usc::ActiveOutputsHandler active_outputs_handler{[](usc::ActiveOutputs const&){}};
+};
+
 struct AUnityDisplayService : testing::Test
 {
     ut::DBusBus bus;
 
-    std::shared_ptr<ut::MockScreen> const mock_screen =
-        std::make_shared<testing::NiceMock<ut::MockScreen>>();
+    std::shared_ptr<FakeScreen> const fake_screen =
+        std::make_shared<testing::NiceMock<FakeScreen>>();
     ut::UnityDisplayDBusClient client{bus.address()};
     std::shared_ptr<usc::DBusEventLoop> const dbus_loop =
         std::make_shared<usc::DBusEventLoop>();
-    usc::UnityDisplayService service{dbus_loop, bus.address(), mock_screen};
+    usc::UnityDisplayService service{dbus_loop, bus.address(), fake_screen};
     std::shared_ptr<usc::DBusConnectionThread> const dbus_thread =
         std::make_shared<usc::DBusConnectionThread>(dbus_loop);
 };
@@ -66,16 +84,38 @@ TEST_F(AUnityDisplayService, replies_to_introspection_request)
 
 TEST_F(AUnityDisplayService, forwards_turn_on_request)
 {
-    EXPECT_CALL(*mock_screen, turn_on());
+    EXPECT_CALL(*fake_screen, turn_on());
 
     client.request_turn_on();
 }
 
 TEST_F(AUnityDisplayService, forwards_turn_off_request)
 {
-    EXPECT_CALL(*mock_screen, turn_off());
+    EXPECT_CALL(*fake_screen, turn_off());
 
     client.request_turn_off();
+}
+
+TEST_F(AUnityDisplayService, emits_num_active_displays)
+{
+    using namespace testing;
+
+    usc::ActiveOutputs expected_active_outputs;
+    expected_active_outputs.internal = 2;
+    expected_active_outputs.external = 3;
+
+    fake_screen->notify_active_outputs(expected_active_outputs);
+    // Received messages are queued at the destination, so it doesn't
+    // matter that we start listening after the signal has been sent
+    auto message = client.listen_for_num_active_outputs_signal();
+
+    usc::ActiveOutputs active_outputs{-1, -1};
+    dbus_message_get_args(message, nullptr,
+        DBUS_TYPE_INT32, &active_outputs.internal,
+        DBUS_TYPE_INT32, &active_outputs.external,
+        DBUS_TYPE_INVALID);
+
+    EXPECT_THAT(active_outputs, Eq(expected_active_outputs));
 }
 
 TEST_F(AUnityDisplayService, returns_error_reply_for_unsupported_method)
