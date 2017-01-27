@@ -1,8 +1,8 @@
-unity-system-compositor (0.9.0-0ubuntu1) UNRELEASED; urgency=medium
+unity-system-compositor (0.9.0+17.04.20170127-0ubuntu1) zesty; urgency=medium
 
   * Update for compatibility with Mir 0.26
 
- -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Tue, 17 Jan 2017 10:58:13 -0600
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Fri, 27 Jan 2017 03:02:22 +0000
 
 unity-system-compositor (0.8.0+17.04.20161206-0ubuntu1) zesty; urgency=medium
 
