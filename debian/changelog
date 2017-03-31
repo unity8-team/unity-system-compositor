@@ -1,4 +1,4 @@
-unity-system-compositor (0.9.1-0ubuntu2) UNRELEASED; urgency=medium
+unity-system-compositor (0.9.1+17.04.20170331.1-0ubuntu1) zesty; urgency=medium
 
   [ Cemil Azizoglu ]
   * Update for compatibility with Mir 0.26
@@ -6,7 +6,7 @@ unity-system-compositor (0.9.1-0ubuntu2) UNRELEASED; urgency=medium
   [ Albert Astals Cid ]
   * Bla bla
 
- -- Albert Astals Cid <tsdgeos@tsdgeos-ThinkPad-Yoga-460>  Mon, 27 Mar 2017 15:17:38 +0200
+ -- Albert Astals Cid <albert.astals@canonical.com>  Fri, 31 Mar 2017 11:13:00 +0000
 
 unity-system-compositor (0.8.0+17.04.20161206-0ubuntu1) zesty; urgency=medium
 
